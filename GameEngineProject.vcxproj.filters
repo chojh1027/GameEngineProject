@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="소스 파일\box2d-lite">
+      <UniqueIdentifier>{9e3c78a4-8aa9-43e5-963d-189446d57224}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\imgui">
+      <UniqueIdentifier>{6ba2173c-6c76-48e6-ac5e-39ef2fc3a4f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\glad">
+      <UniqueIdentifier>{68ad67b5-d36e-4279-b064-0db831050ce3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\glfw">
+      <UniqueIdentifier>{56a9bfd5-7ae8-46b6-8e0c-d22f0a10d284}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\samples">
+      <UniqueIdentifier>{fad3322b-c9a1-4b22-a1d9-86ddebc8f01e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\box2d-lite">
+      <UniqueIdentifier>{f2dba933-e37f-4fc6-8e8d-c1123c7b2278}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\glfw">
+      <UniqueIdentifier>{3627b7ad-7e1c-4405-b766-ee0a4be3bca0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\glad">
+      <UniqueIdentifier>{9835ac1f-93ab-405c-9dcf-56b3ebe4c66d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\samples">
+      <UniqueIdentifier>{6ad596f5-e5de-40e0-af34-a5c77fbcf6c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\imgui">
+      <UniqueIdentifier>{f303b5ed-693f-4f8e-8c7e-7369dcb1fd5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\KHR">
+      <UniqueIdentifier>{ccb459fe-f11b-4d1d-83cf-ff0804be40ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\imgui\backends">
+      <UniqueIdentifier>{8eca276d-3c94-4031-a3d9-d41de6642451}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Arbiter.cpp">
+      <Filter>소스 파일\box2d-lite</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Body.cpp">
+      <Filter>소스 파일\box2d-lite</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Collide.cpp">
+      <Filter>소스 파일\box2d-lite</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Joint.cpp">
+      <Filter>소스 파일\box2d-lite</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World.cpp">
+      <Filter>소스 파일\box2d-lite</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glad\src\glad.c">
+      <Filter>소스 파일\glad</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui.cpp">
+      <Filter>소스 파일\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_demo.cpp">
+      <Filter>소스 파일\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_draw.cpp">
+      <Filter>소스 파일\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\imgui_widgets.cpp">
+      <Filter>소스 파일\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="samples\main.cpp">
+      <Filter>소스 파일\samples</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\context.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\egl_context.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\init.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\input.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\monitor.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\osmesa_context.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\vulkan.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\wgl_context.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\win32_init.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\win32_joystick.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\win32_monitor.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\win32_thread.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\win32_time.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\win32_window.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\window.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glfw\src\xkb_unicode.c">
+      <Filter>소스 파일\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\backends\imgui_impl_glfw.cpp">
+      <Filter>소스 파일\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="external\imgui\backends\imgui_impl_opengl2.cpp">
+      <Filter>소스 파일\imgui\backends</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\box2d-lite\Arbiter.h">
+      <Filter>헤더 파일\box2d-lite</Filter>
+    </ClInclude>
+    <ClInclude Include="include\box2d-lite\Body.h">
+      <Filter>헤더 파일\box2d-lite</Filter>
+    </ClInclude>
+    <ClInclude Include="include\box2d-lite\Joint.h">
+      <Filter>헤더 파일\box2d-lite</Filter>
+    </ClInclude>
+    <ClInclude Include="include\box2d-lite\World.h">
+      <Filter>헤더 파일\box2d-lite</Filter>
+    </ClInclude>
+    <ClInclude Include="include\box2d-lite\MathUtils.h">
+      <Filter>헤더 파일\box2d-lite</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\backends\imgui_impl_glfw.h">
+      <Filter>헤더 파일\samples</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\backends\imgui_impl_opengl2.h">
+      <Filter>헤더 파일\samples</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glad\include\glad\glad.h">
+      <Filter>헤더 파일\glad</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glad\include\KHR\khrplatform.h">
+      <Filter>헤더 파일\KHR</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\include\GLFW\glfw3.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\include\GLFW\glfw3native.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imgui.h">
+      <Filter>헤더 파일\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imconfig.h">
+      <Filter>헤더 파일\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imstb_rectpack.h">
+      <Filter>헤더 파일\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imstb_textedit.h">
+      <Filter>헤더 파일\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imstb_truetype.h">
+      <Filter>헤더 파일\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imgui\imgui_internal.h">
+      <Filter>헤더 파일\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\xkb_unicode.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\egl_context.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\glfw_config.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\glx_context.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\internal.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\mappings.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\nsgl_context.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\osmesa_context.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\wgl_context.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\win32_joystick.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="external\glfw\src\win32_platform.h">
+      <Filter>헤더 파일\glfw</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+  </ItemGroup>
+</Project>
