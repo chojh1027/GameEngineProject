@@ -49,21 +49,27 @@
     <Filter Include="소스 파일\imgui\backends">
       <UniqueIdentifier>{8eca276d-3c94-4031-a3d9-d41de6642451}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\my_physics">
+      <UniqueIdentifier>{d87658b5-a367-434b-9d74-0c0bf3bfce92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\my_physics">
+      <UniqueIdentifier>{ac3b2c08-03c7-4a3c-8cca-8a86ebcb950a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Arbiter.cpp">
+    <ClCompile Include="src\box2d-lite\Arbiter.cpp">
       <Filter>소스 파일\box2d-lite</Filter>
     </ClCompile>
-    <ClCompile Include="src\Body.cpp">
+    <ClCompile Include="src\box2d-lite\Body.cpp">
       <Filter>소스 파일\box2d-lite</Filter>
     </ClCompile>
-    <ClCompile Include="src\Collide.cpp">
+    <ClCompile Include="src\box2d-lite\Collide.cpp">
       <Filter>소스 파일\box2d-lite</Filter>
     </ClCompile>
-    <ClCompile Include="src\Joint.cpp">
+    <ClCompile Include="src\box2d-lite\Joint.cpp">
       <Filter>소스 파일\box2d-lite</Filter>
     </ClCompile>
-    <ClCompile Include="src\World.cpp">
+    <ClCompile Include="src\box2d-lite\World.cpp">
       <Filter>소스 파일\box2d-lite</Filter>
     </ClCompile>
     <ClCompile Include="external\glad\src\glad.c">
@@ -137,6 +143,15 @@
     </ClCompile>
     <ClCompile Include="external\imgui\backends\imgui_impl_opengl2.cpp">
       <Filter>소스 파일\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\Transform.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\GameObject.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\Component.cpp">
+      <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -224,8 +239,18 @@
     <ClInclude Include="external\glfw\src\win32_platform.h">
       <Filter>헤더 파일\glfw</Filter>
     </ClInclude>
+    <ClInclude Include="include\my_engine\GameObject.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\Transform.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\Component.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="README.md" />
   </ItemGroup>
 </Project>

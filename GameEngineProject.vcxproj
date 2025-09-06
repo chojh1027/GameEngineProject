@@ -92,7 +92,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\glad\include;$(ProjectDir)external\glfw\include;$(ProjectDir)external;$(ProjectDir)src;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\glad\include;$(ProjectDir)external\glfw\include;$(ProjectDir)external;$(ProjectDir)src;$(ProjectDir)include;$(ProjectDir)my_engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -107,7 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\glad\include;$(ProjectDir)external\glfw\include;$(ProjectDir)external;$(ProjectDir)src;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\glad\include;$(ProjectDir)external\glfw\include;$(ProjectDir)external;$(ProjectDir)src;$(ProjectDir)include;$(ProjectDir)my_engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\glad\include;$(ProjectDir)external\glfw\include;$(ProjectDir)external;$(ProjectDir)src;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\glad\include;$(ProjectDir)external\glfw\include;$(ProjectDir)external;$(ProjectDir)src;$(ProjectDir)include;$(ProjectDir)my_engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,7 +137,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\glad\include;$(ProjectDir)external\glfw\include;$(ProjectDir)external;$(ProjectDir)src;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\glad\include;$(ProjectDir)external\glfw\include;$(ProjectDir)external;$(ProjectDir)src;$(ProjectDir)include;$(ProjectDir)my_engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\my_engine\Component.cpp" />
     <ClCompile Include="external\glad\src\glad.c" />
     <ClCompile Include="external\glfw\src\context.c" />
     <ClCompile Include="external\glfw\src\egl_context.c" />
@@ -170,14 +171,17 @@
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="external\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="external\imgui\backends\imgui_impl_opengl2.cpp" />
+    <ClCompile Include="src\my_engine\GameObject.cpp" />
     <ClCompile Include="samples\main.cpp" />
-    <ClCompile Include="src\Arbiter.cpp" />
-    <ClCompile Include="src\Body.cpp" />
-    <ClCompile Include="src\Collide.cpp" />
-    <ClCompile Include="src\Joint.cpp" />
-    <ClCompile Include="src\World.cpp" />
+    <ClCompile Include="src\box2d-lite\Arbiter.cpp" />
+    <ClCompile Include="src\box2d-lite\Body.cpp" />
+    <ClCompile Include="src\box2d-lite\Collide.cpp" />
+    <ClCompile Include="src\box2d-lite\Joint.cpp" />
+    <ClCompile Include="src\box2d-lite\World.cpp" />
+    <ClCompile Include="src\my_engine\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\my_engine\Component.h" />
     <ClInclude Include="external\glad\include\glad\glad.h" />
     <ClInclude Include="external\glad\include\KHR\khrplatform.h" />
     <ClInclude Include="external\glfw\include\GLFW\glfw3.h" />
@@ -206,9 +210,12 @@
     <ClInclude Include="include\box2d-lite\World.h" />
     <ClInclude Include="external\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="external\imgui\backends\imgui_impl_opengl2.h" />
+    <ClInclude Include="include\my_engine\GameObject.h" />
+    <ClInclude Include="include\my_engine\Transform.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
