@@ -173,6 +173,7 @@
     <ClCompile Include="external\imgui\backends\imgui_impl_opengl2.cpp" />
     <ClCompile Include="src\my_engine\GameLoop.cpp" />
     <ClCompile Include="src\my_engine\GameObject.cpp" />
+    <ClCompile Include="src\my_engine\Rigidbody.cpp" />
     <ClCompile Include="samples\main.cpp" />
     <ClCompile Include="src\box2d-lite\Arbiter.cpp" />
     <ClCompile Include="src\box2d-lite\Body.cpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="external\imgui\backends\imgui_impl_opengl2.h" />
     <ClInclude Include="include\my_engine\GameLoop.h" />
     <ClInclude Include="include\my_engine\GameObject.h" />
+    <ClInclude Include="include\my_engine\Rigidbody.h" />
     <ClInclude Include="include\my_engine\Transform.h" />
   </ItemGroup>
   <ItemGroup>
