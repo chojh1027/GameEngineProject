@@ -23,6 +23,9 @@
 #include "box2d-lite/World.h"
 #include "box2d-lite/Body.h"
 #include "box2d-lite/Joint.h"
+#include "my_engine/Component.h"
+#include "my_engine/GameLoop.h"
+#include "my_engine/GameObject.h"
 
 namespace
 {
@@ -564,29 +567,126 @@ static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int 
 
 static void Reshape(GLFWwindow*, int w, int h)
 {
-	width = w;
-	height = h > 0 ? h : 1;
+        width = w;
+        height = h > 0 ? h : 1;
 
-	glViewport(0, 0, width, height);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+        glViewport(0, 0, width, height);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
 
-	float aspect = float(width) / float(height);
-	if (width >= height)
-	{
-		// aspect >= 1, set the height from -1 to 1, with larger width
-		glOrtho(-zoom * aspect, zoom * aspect, -zoom + pan_y, zoom + pan_y, -1.0, 1.0);
-	}
-	else
-	{
-		// aspect < 1, set the width to -1 to 1, with larger height
-		glOrtho(-zoom, zoom, -zoom / aspect + pan_y, zoom / aspect + pan_y, -1.0, 1.0);
-	}
+        float aspect = float(width) / float(height);
+        if (width >= height)
+        {
+                // aspect >= 1, set the height from -1 to 1, with larger width
+                glOrtho(-zoom * aspect, zoom * aspect, -zoom + pan_y, zoom + pan_y, -1.0, 1.0);
+        }
+        else
+        {
+                // aspect < 1, set the width to -1 to 1, with larger height
+                glOrtho(-zoom, zoom, -zoom / aspect + pan_y, zoom / aspect + pan_y, -1.0, 1.0);
+        }
 }
+
+class Box2DSampleComponent : public Component
+{
+public:
+        Box2DSampleComponent(GameObject* owner, GameLoop& loopRef, GLFWwindow* windowPtr)
+                : Component(owner)
+                , loop(loopRef)
+                , window(windowPtr)
+        {
+        }
+
+        void Update(float deltaTime) override
+        {
+                if (window == nullptr)
+                {
+                        loop.Stop();
+                        return;
+                }
+
+                if (glfwWindowShouldClose(window))
+                {
+                        loop.Stop();
+                        return;
+                }
+
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                ImGui_ImplOpenGL2_NewFrame();
+                ImGui_ImplGlfw_NewFrame();
+                ImGui::NewFrame();
+
+                ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
+                ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
+                ImGui::End();
+
+                DrawText(5, 5, demoStrings[demoIndex]);
+                DrawText(5, 35, "Keys: 1-9 Demos, Space to Launch the Bomb");
+
+                char buffer[64];
+                sprintf(buffer, "(A)ccumulation %s", World::accumulateImpulses ? "ON" : "OFF");
+                DrawText(5, 65, buffer);
+
+                sprintf(buffer, "(P)osition Correction %s", World::positionCorrection ? "ON" : "OFF");
+                DrawText(5, 95, buffer);
+
+                sprintf(buffer, "(W)arm Starting %s", World::warmStarting ? "ON" : "OFF");
+                DrawText(5, 125, buffer);
+
+                snprintf(buffer, sizeof(buffer), "Delta Time: %.3f", deltaTime);
+                DrawText(5, 155, buffer);
+
+                glMatrixMode(GL_MODELVIEW);
+                glLoadIdentity();
+
+                const float step = deltaTime > 0.0f ? deltaTime : timeStep;
+                world.Step(step);
+
+                for (int i = 0; i < numBodies; ++i)
+                        DrawBody(bodies + i);
+
+                for (int i = 0; i < numJoints; ++i)
+                        DrawJoint(joints + i);
+
+                glPointSize(4.0f);
+                glColor3f(1.0f, 0.0f, 0.0f);
+                glBegin(GL_POINTS);
+                std::map<ArbiterKey, Arbiter>::const_iterator iter;
+                for (iter = world.arbiters.begin(); iter != world.arbiters.end(); ++iter)
+                {
+                        const Arbiter& arbiter = iter->second;
+                        for (int i = 0; i < arbiter.numContacts; ++i)
+                        {
+                                Vec2 p = arbiter.contacts[i].position;
+                                glVertex2f(p.x, p.y);
+                        }
+                }
+                glEnd();
+                glPointSize(1.0f);
+
+                ImGui::Render();
+                ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+
+                glfwPollEvents();
+                glfwSwapBuffers(window);
+        }
+
+        void Destroy() override
+        {
+                ImGui_ImplOpenGL2_Shutdown();
+                ImGui_ImplGlfw_Shutdown();
+                ImGui::DestroyContext();
+        }
+
+private:
+        GameLoop& loop;
+        GLFWwindow* window;
+};
 
 int main(int, char**)
 {
-	glfwSetErrorCallback(glfwErrorCallback);
+        glfwSetErrorCallback(glfwErrorCallback);
 
 	if (glfwInit() == 0)
 	{
@@ -645,68 +745,22 @@ int main(int, char**)
 		glOrtho(-zoom, zoom, -zoom / aspect + pan_y, zoom / aspect + pan_y, -1.0, 1.0);
 	}
 
-	InitDemo(0);
+        InitDemo(0);
 
-	while (!glfwWindowShouldClose(mainWindow))
-	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GameLoop gameLoop;
+        GameObject gameWorld;
+        Box2DSampleComponent sampleComponent(&gameWorld, gameLoop, mainWindow);
+        gameWorld.AddComponent(&sampleComponent);
 
-		ImGui_ImplOpenGL2_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+        if (!gameLoop.AddGameObject(&gameWorld))
+        {
+                fprintf(stderr, "Failed to register game object with the game loop.\n");
+                glfwTerminate();
+                return -1;
+        }
 
-		// Globally position text
-		ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
-		ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
-		ImGui::End();
+        gameLoop.Run();
 
-		DrawText(5, 5, demoStrings[demoIndex]);
-		DrawText(5, 35, "Keys: 1-9 Demos, Space to Launch the Bomb");
-
-		char buffer[64];
-		sprintf(buffer, "(A)ccumulation %s", World::accumulateImpulses ? "ON" : "OFF");
-		DrawText(5, 65, buffer);
-
-		sprintf(buffer, "(P)osition Correction %s", World::positionCorrection ? "ON" : "OFF");
-		DrawText(5, 95, buffer);
-
-		sprintf(buffer, "(W)arm Starting %s", World::warmStarting ? "ON" : "OFF");
-		DrawText(5, 125, buffer);
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		world.Step(timeStep);
-
-		for (int i = 0; i < numBodies; ++i)
-			DrawBody(bodies + i);
-
-		for (int i = 0; i < numJoints; ++i)
-			DrawJoint(joints + i);
-
-		glPointSize(4.0f);
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glBegin(GL_POINTS);
-		std::map<ArbiterKey, Arbiter>::const_iterator iter;
-		for (iter = world.arbiters.begin(); iter != world.arbiters.end(); ++iter)
-		{
-			const Arbiter& arbiter = iter->second;
-			for (int i = 0; i < arbiter.numContacts; ++i)
-			{
-				Vec2 p = arbiter.contacts[i].position;
-				glVertex2f(p.x, p.y);
-			}
-		}
-		glEnd();
-		glPointSize(1.0f);
-
-		ImGui::Render();
-		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-
-		glfwPollEvents();
-		glfwSwapBuffers(mainWindow);
-	}
-
-	glfwTerminate();
-	return 0;
+        glfwTerminate();
+        return 0;
 }
