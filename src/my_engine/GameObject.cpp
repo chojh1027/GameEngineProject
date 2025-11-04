@@ -1,5 +1,5 @@
 #include "my_engine/GameObject.h"
-#include "my_engine/transform.h"
+#include "my_engine/Transform.h"
 
 void GameObject::Init() {
 	for (int i = 0; i < this->componentCount; i++)
