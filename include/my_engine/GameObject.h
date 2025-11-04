@@ -2,13 +2,12 @@
 #ifndef GAMEOBJECT_H
 #define GAMEOBJECT_H
 
+#include "my_engine/Constant.h"
 #include "my_engine/Transform.h"
-#include "my_engine/Component.h"
 
-// 게임 오브젝트 클래스 정의
-// 가져야할 요소:
+
 // Transform	- Position, Rotation, Scale
-// Components	- Component 클래스를 상속받는 클래스들의 배열
+// Components	- Component array
 // Init()		
 // Update()		
 // Destroy()	
@@ -17,18 +16,26 @@ class GameObject {
 public:
 	Transform* transform = nullptr;
 
-	GameObject() : components{} {
+	GameObject() {
 		transform = new Transform(this);
+		components[0] = transform;
+	}
+	GameObject(const Transform& t) {
+		transform = new Transform(this, t.GetPosition(), t.GetRotation(), t.GetScale());
 		components[0] = transform;
 	}
 	~GameObject() {}
 
-	void Init() {}
-	void Update(float deltaTime) {}
-	void Destroy() {}
+	void Init();
+	void Start();
+	void Update(float deltaTime);
+	void Destroy();
+
+	void AddComponent(Component* component);
 
 private:
-	Component* components[10];
+	Component* components[MAX_COMPONENT_COUNT];
+	int componentCount = 1;
 };
 
 

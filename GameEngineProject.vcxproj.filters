@@ -248,6 +248,12 @@
     <ClInclude Include="include\my_engine\Component.h">
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
+    <ClInclude Include="include\my_engine\Constant.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\Circle.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

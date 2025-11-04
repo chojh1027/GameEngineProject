@@ -17,6 +17,11 @@ float Transform::GetRotation() const {
 	return this->rotation;
 }
 
+Mat22 Transform::GetRotationMat() const {
+	float angle = this->rotation;
+	return Mat22(angle);
+}
+
 void Transform::SetScale(const Vec2& scale) {
 	this->scale = scale;
 }

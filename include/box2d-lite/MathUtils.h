@@ -21,7 +21,7 @@ const float k_pi = 3.14159265358979323846264f;
 
 struct Vec2
 {
-	Vec2() {}
+	Vec2() { x = 0; y = 0; }
 	Vec2(float x, float y) : x(x), y(y) {}
 
 	void Set(float x_, float y_) { x = x_; y = y_; }

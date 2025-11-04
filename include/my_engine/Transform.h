@@ -7,7 +7,7 @@
 
 class GameObject;
 
-// 트랜스폼 클래스 정의
+
 class Transform : public Component {
 public:
 	Transform(GameObject* gameObject) : Component(gameObject) {}
@@ -19,6 +19,7 @@ public:
 	void	SetPosition(const Vec2& pos);
 
 	float	GetRotation() const;
+	Mat22	GetRotationMat() const;
 	void	SetRotation(float rot);
 
 	Vec2	GetScale() const;

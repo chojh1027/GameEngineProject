@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -181,6 +181,7 @@
     <ClCompile Include="src\my_engine\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\my_engine\Constant.h" />
     <ClInclude Include="include\my_engine\Component.h" />
     <ClInclude Include="external\glad\include\glad\glad.h" />
     <ClInclude Include="external\glad\include\KHR\khrplatform.h" />
