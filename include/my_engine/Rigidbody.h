@@ -58,10 +58,9 @@ public:
 	const Body& GetBody() const { return body; }
 
 private:
-	void InitializeBody();
-	Vec2 GetColliderWidth() const;
-	float ComputeMass() const;
-	float ComputeInertia(float mass) const;
+        void InitializeBody();
+        Vec2 GetColliderWidth() const;
+        float ComputeMass() const;
 	void SyncTransformFromBody();
 	void SyncBodyFromTransform();
 

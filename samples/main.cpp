@@ -71,26 +71,44 @@ static void DrawText(int x, int y, const char* string)
 
 static void DrawBody(Body* body)
 {
-	Mat22 R(body->rotation);
-	Vec2 x = body->position;
-	Vec2 h = 0.5f * body->width;
+        Mat22 R(body->rotation);
+        Vec2 x = body->position;
+        Vec2 h = 0.5f * body->width;
 
-	Vec2 v1 = x + R * Vec2(-h.x, -h.y);
-	Vec2 v2 = x + R * Vec2( h.x, -h.y);
-	Vec2 v3 = x + R * Vec2( h.x,  h.y);
-	Vec2 v4 = x + R * Vec2(-h.x,  h.y);
+        if (body == bomb)
+                glColor3f(0.4f, 0.9f, 0.4f);
+        else
+                glColor3f(0.8f, 0.8f, 0.9f);
 
-	if (body == bomb)
-		glColor3f(0.4f, 0.9f, 0.4f);
-	else
-		glColor3f(0.8f, 0.8f, 0.9f);
+        if (body->shape == Body::ShapeType::Circle)
+        {
+                const int segments = 32;
+                float radius = body->radius;
 
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(v1.x, v1.y);
-	glVertex2f(v2.x, v2.y);
-	glVertex2f(v3.x, v3.y);
-	glVertex2f(v4.x, v4.y);
-	glEnd();
+                glBegin(GL_LINE_LOOP);
+                for (int i = 0; i < segments; ++i)
+                {
+                        float angle = 2.0f * k_pi * (static_cast<float>(i) / static_cast<float>(segments));
+                        float c = cosf(angle);
+                        float s = sinf(angle);
+                        Vec2 vertex = x + Vec2(c * radius, s * radius);
+                        glVertex2f(vertex.x, vertex.y);
+                }
+                glEnd();
+                return;
+        }
+
+        Vec2 v1 = x + R * Vec2(-h.x, -h.y);
+        Vec2 v2 = x + R * Vec2( h.x, -h.y);
+        Vec2 v3 = x + R * Vec2( h.x,  h.y);
+        Vec2 v4 = x + R * Vec2(-h.x,  h.y);
+
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(v1.x, v1.y);
+        glVertex2f(v2.x, v2.y);
+        glVertex2f(v3.x, v3.y);
+        glVertex2f(v4.x, v4.y);
+        glEnd();
 }
 
 static void DrawJoint(Joint* joint)

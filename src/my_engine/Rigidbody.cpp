@@ -12,10 +12,10 @@ namespace
 }
 
 Rigidbody::Rigidbody(GameObject* gameObject)
-	: Component(gameObject)
+        : Component(gameObject)
 {
-	body.Set(Vec2(1.0f, 1.0f), 1.0f);
-	SyncBodyFromTransform();
+        body.Set(Vec2(1.0f, 1.0f), 1.0f);
+        SyncBodyFromTransform();
 }
 
 void Rigidbody::Init()
@@ -136,28 +136,21 @@ void Rigidbody::InitializeBody()
 {
 	SyncBodyFromTransform();
 
-	const Vec2 width = GetColliderWidth();
-	float mass = bodyType == BodyType::Static ? FLT_MAX : ComputeMass();
+        const Vec2 width = GetColliderWidth();
+        float mass = bodyType == BodyType::Static ? FLT_MAX : ComputeMass();
 
-	body.Set(width, mass);
+        Body::ShapeType shapeType = colliderType == ColliderType::Circle ? Body::ShapeType::Circle : Body::ShapeType::Box;
+        body.Set(width, mass, shapeType);
 
-	accumulatedForces.Set(0.0f, 0.0f);
-	accumulatedTorque = 0.0f;
+        accumulatedForces.Set(0.0f, 0.0f);
+        accumulatedTorque = 0.0f;
 
 	if (bodyType == BodyType::Static)
 	{
 		body.velocity.Set(0.0f, 0.0f);
 		body.angularVelocity = 0.0f;
 	}
-
-	if (colliderType == ColliderType::Circle && mass < FLT_MAX)
-	{
-		const float inertia = ComputeInertia(mass);
-		body.I = inertia;
-		body.invI = inertia > 0.0f ? 1.0f / inertia : 0.0f;
-	}
-
-	SyncBodyFromTransform();
+        SyncBodyFromTransform();
 }
 
 Vec2 Rigidbody::GetColliderWidth() const
@@ -179,16 +172,6 @@ float Rigidbody::ComputeMass() const
 	}
 
 	return density * boxSize.x * boxSize.y;
-}
-
-float Rigidbody::ComputeInertia(float mass) const
-{
-	if (colliderType == ColliderType::Circle)
-		return 0.5f * mass * circleRadius * circleRadius;
-
-	const float widthSq = boxSize.x * boxSize.x;
-	const float heightSq = boxSize.y * boxSize.y;
-	return mass * (widthSq + heightSq) / 12.0f;
 }
 
 void Rigidbody::SyncTransformFromBody()

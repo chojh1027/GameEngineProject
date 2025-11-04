@@ -16,13 +16,19 @@
 
 struct Body
 {
-	Body();
-	void Set(const Vec2& w, float m);
+        enum class ShapeType
+        {
+                Box,
+                Circle
+        };
 
-	void AddForce(const Vec2& f)
-	{
-		force += f;
-	}
+        Body();
+        void Set(const Vec2& w, float m, ShapeType shapeType = ShapeType::Box);
+
+        void AddForce(const Vec2& f)
+        {
+                force += f;
+        }
 
 	Vec2 position;
 	float rotation;
@@ -30,14 +36,16 @@ struct Body
 	Vec2 velocity;
 	float angularVelocity;
 
-	Vec2 force;
-	float torque;
+        Vec2 force;
+        float torque;
 
-	Vec2 width;
+        Vec2 width;
+        float radius;
+        ShapeType shape;
 
-	float friction;
-	float mass, invMass;
-	float I, invI;
+        float friction;
+        float mass, invMass;
+        float I, invI;
 };
 
 #endif
