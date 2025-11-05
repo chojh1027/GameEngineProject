@@ -151,6 +151,37 @@ static void LaunchBomb()
 	bomb->angularVelocity = Random(-20.0f, 20.0f);
 }
 
+// Mixed boxes and circles
+static void Demo0(Body* b, Joint* /*j*/)
+{
+	// Ground
+	b->Set(Vec2(100.0f, 20.0f), FLT_MAX);
+	b->position.Set(0.0f, -0.5f * b->width.y);
+	world.Add(b);
+	++b;
+	++numBodies;
+
+	// Box stack
+	for (int i = 0; i < 5; ++i)
+	{
+		b->Set(Vec2(1.0f, 1.0f), 10.0f);
+		b->position.Set(-6.0f + 3.0f * i, 5.0f);
+		world.Add(b);
+		++b;
+		++numBodies;
+	}
+
+	// Circle stack
+	for (int i = 0; i < 5; ++i)
+	{
+		b->Set(Vec2(1.0f, 1.0f), 10.0f, Body::ShapeType::Circle);
+		b->position.Set(-6.0f + 3.0f * i, 8.0f);
+		world.Add(b);
+		++b;
+		++numBodies;
+	}
+}
+
 // Single box
 static void Demo1(Body* b, Joint* j)
 {
@@ -516,8 +547,9 @@ static void Demo9(Body* b, Joint* j)
 	}
 }
 
-void (*demos[])(Body* b, Joint* j) = {Demo1, Demo2, Demo3, Demo4, Demo5, Demo6, Demo7, Demo8, Demo9};
+void (*demos[])(Body* b, Joint* j) = {Demo0, Demo1, Demo2, Demo3, Demo4, Demo5, Demo6, Demo7, Demo8, Demo9};
 const char* demoStrings[] = {
+	"Demo 0: Boxes and Circles",
 	"Demo 1: A Single Box",
 	"Demo 2: Simple Pendulum",
 	"Demo 3: Varying Friction Coefficients",
@@ -553,6 +585,7 @@ static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int 
 		glfwSetWindowShouldClose(mainWindow, GL_TRUE);
 		break;
 
+	case '0':
 	case '1':
 	case '2':
 	case '3':
@@ -562,7 +595,7 @@ static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int 
 	case '7':
 	case '8':
 	case '9':
-		InitDemo(key - GLFW_KEY_1);
+		InitDemo(key - '0');
 		break;
 
 	case GLFW_KEY_A:
