@@ -153,6 +153,9 @@
     <ClCompile Include="src\my_engine\GameObject.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
+    <ClCompile Include="src\my_engine\Rigidbody.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
     <ClCompile Include="src\my_engine\Component.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
@@ -243,6 +246,9 @@
       <Filter>헤더 파일\glfw</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\GameObject.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\Rigidbody.h">
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\Transform.h">
