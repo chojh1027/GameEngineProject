@@ -169,7 +169,7 @@ static int CollideCircles(Contact* contacts, Body* bodyA, Body* bodyB)
         if (distance > FLT_EPSILON)
                 normal = (1.0f / distance) * difference;
 
-        contacts[0].position = bodyA->position + normal * radiusA;
+        contacts[0].position = bodyA->position + radiusA * normal;
         contacts[0].normal = normal;
         contacts[0].separation = distance - combinedRadius;
         contacts[0].feature.value = 0;
