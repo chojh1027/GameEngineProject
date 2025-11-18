@@ -1,4 +1,5 @@
 #include "my_engine/GameObject.h"
+#include "my_engine/Component.h"
 #include "my_engine/Transform.h"
 
 void GameObject::Init() {

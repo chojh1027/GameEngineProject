@@ -5,6 +5,8 @@
 #include "my_engine/Constant.h"
 #include "my_engine/Transform.h"
 
+class Component;
+
 
 // Transform	- Position, Rotation, Scale
 // Components	- Component array
