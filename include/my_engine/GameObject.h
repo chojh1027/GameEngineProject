@@ -26,10 +26,11 @@ public:
 	}
 	~GameObject() {}
 
-	void Init();
-	void Start();
-	void Update(float deltaTime);
-	void Destroy();
+void Init();
+void Start();
+void Update(float deltaTime);
+void FixedUpdate(float fixedDeltaTime);
+void Destroy();
 
 	void AddComponent(Component* component);
 

@@ -9,8 +9,11 @@
 * It is provided "as is" without express or implied warranty.
 */
 
-#include "box2d-lite/Arbiter.h"
-#include "box2d-lite/Body.h"
+#include "my_engine/physics/Arbiter.h"
+#include "my_engine/physics/Body.h"
+
+namespace my_engine::physics
+{
 
 // Box vertex and edge numbering:
 //
@@ -93,10 +96,10 @@ int ClipSegmentToLine(ClipVertex vOut[2], ClipVertex vIn[2],
 }
 
 static void ComputeIncidentEdge(ClipVertex c[2], const Vec2& h, const Vec2& pos,
-								const Mat22& Rot, const Vec2& normal)
+                                                                const Mat22& Rot, const Vec2& normal)
 {
-	// The normal is from the reference box. Convert it
-	// to the incident boxe's frame and flip sign.
+        // The normal is from the reference box. Convert it
+        // to the incident boxe's frame and flip sign.
 	Mat22 RotT = Rot.Transpose();
 	Vec2 n = -(RotT * normal);
 	Vec2 nAbs = Abs(n);
@@ -148,12 +151,132 @@ static void ComputeIncidentEdge(ClipVertex c[2], const Vec2& h, const Vec2& pos,
 		}
 	}
 
-	c[0].v = pos + Rot * c[0].v;
-	c[1].v = pos + Rot * c[1].v;
+        c[0].v = pos + Rot * c[0].v;
+        c[1].v = pos + Rot * c[1].v;
+}
+
+static int CollideCircles(Contact* contacts, Body* bodyA, Body* bodyB)
+{
+        const float radiusA = bodyA->radius;
+        const float radiusB = bodyB->radius;
+
+        Vec2 difference = bodyB->position - bodyA->position;
+        float distanceSq = Dot(difference, difference);
+        float combinedRadius = radiusA + radiusB;
+
+        if (distanceSq > combinedRadius * combinedRadius)
+                return 0;
+
+        float distance = sqrtf(distanceSq);
+        Vec2 normal(1.0f, 0.0f);
+        if (distance > FLT_EPSILON)
+                normal = (1.0f / distance) * difference;
+
+        contacts[0].position = bodyA->position + radiusA * normal;
+        contacts[0].normal = normal;
+        contacts[0].separation = distance - combinedRadius;
+        contacts[0].feature.value = 0;
+        return 1;
+}
+
+static int CollideCircleBox(Contact* contacts, Body* circle, Body* box)
+{
+        Mat22 Rot(box->rotation);
+        Mat22 RotT = Rot.Transpose();
+
+        Vec2 h = 0.5f * box->width;
+        Vec2 circleLocal = RotT * (circle->position - box->position);
+        Vec2 closest = circleLocal;
+
+        bool inside = true;
+
+        if (closest.x < -h.x)
+        {
+                closest.x = -h.x;
+                inside = false;
+        }
+        else if (closest.x > h.x)
+        {
+                closest.x = h.x;
+                inside = false;
+        }
+
+        if (closest.y < -h.y)
+        {
+                closest.y = -h.y;
+                inside = false;
+        }
+        else if (closest.y > h.y)
+        {
+                closest.y = h.y;
+                inside = false;
+        }
+
+        Vec2 closestWorld = box->position + Rot * closest;
+        Vec2 diffWorld = closestWorld - circle->position;
+        float radius = circle->radius;
+
+        if (!inside)
+        {
+                Vec2 diffLocal = circleLocal - closest;
+                float distanceSq = Dot(diffLocal, diffLocal);
+                if (distanceSq > radius * radius)
+                        return 0;
+
+                float distance = sqrtf(distanceSq);
+                Vec2 normal(1.0f, 0.0f);
+                if (distance > FLT_EPSILON)
+                        normal = (1.0f / distance) * diffWorld;
+
+                contacts[0].position = closestWorld;
+                contacts[0].normal = normal;
+                contacts[0].separation = distance - radius;
+                contacts[0].feature.value = 0;
+                return 1;
+        }
+
+        float distanceToRight = h.x - circleLocal.x;
+        float distanceToLeft = circleLocal.x + h.x;
+        float distanceToTop = h.y - circleLocal.y;
+        float distanceToBottom = circleLocal.y + h.y;
+
+        float minDistance = distanceToRight;
+        Vec2 normalLocal(1.0f, 0.0f);
+        closest.Set(h.x, Clamp(circleLocal.y, -h.y, h.y));
+
+        if (distanceToLeft < minDistance)
+        {
+                minDistance = distanceToLeft;
+                normalLocal.Set(-1.0f, 0.0f);
+                closest.Set(-h.x, Clamp(circleLocal.y, -h.y, h.y));
+        }
+
+        if (distanceToTop < minDistance)
+        {
+                minDistance = distanceToTop;
+                normalLocal.Set(0.0f, 1.0f);
+                closest.Set(Clamp(circleLocal.x, -h.x, h.x), h.y);
+        }
+
+        if (distanceToBottom < minDistance)
+        {
+                minDistance = distanceToBottom;
+                normalLocal.Set(0.0f, -1.0f);
+                closest.Set(Clamp(circleLocal.x, -h.x, h.x), -h.y);
+        }
+
+        closestWorld = box->position + Rot * closest;
+        Vec2 normal = Rot * normalLocal;
+
+        contacts[0].position = closestWorld;
+        contacts[0].normal = normal;
+        contacts[0].separation = -(radius + minDistance);
+        contacts[0].feature.value = 0;
+        return 1;
 }
 
 // The normal points from A to B
-int Collide(Contact* contacts, Body* bodyA, Body* bodyB)
+static int CollideBoxes(Contact* contacts, Body* bodyA, Body* bodyB)
 {
 	// Setup
 	Vec2 hA = 0.5f * bodyA->width;
@@ -323,7 +446,30 @@ int Collide(Contact* contacts, Body* bodyA, Body* bodyB)
 				Flip(contacts[numContacts].feature);
 			++numContacts;
 		}
-	}
+        }
 
-	return numContacts;
+        return numContacts;
 }
+
+int Collide(Contact* contacts, Body* bodyA, Body* bodyB)
+{
+        using ShapeType = Body::ShapeType;
+
+        if (bodyA->shape == ShapeType::Circle && bodyB->shape == ShapeType::Circle)
+                return CollideCircles(contacts, bodyA, bodyB);
+
+        if (bodyA->shape == ShapeType::Circle && bodyB->shape == ShapeType::Box)
+                return CollideCircleBox(contacts, bodyA, bodyB);
+
+        if (bodyA->shape == ShapeType::Box && bodyB->shape == ShapeType::Circle)
+        {
+                int contactCount = CollideCircleBox(contacts, bodyB, bodyA);
+                for (int i = 0; i < contactCount; ++i)
+                        contacts[i].normal = -contacts[i].normal;
+                return contactCount;
+        }
+
+        return CollideBoxes(contacts, bodyA, bodyB);
+}
+
+} // namespace my_engine::physics

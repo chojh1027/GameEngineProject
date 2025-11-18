@@ -173,6 +173,11 @@
     <ClCompile Include="external\imgui\backends\imgui_impl_opengl2.cpp" />
     <ClCompile Include="src\my_engine\GameLoop.cpp" />
     <ClCompile Include="src\my_engine\GameObject.cpp" />
+    <ClCompile Include="src\my_engine\physics\Arbiter.cpp" />
+    <ClCompile Include="src\my_engine\physics\Body.cpp" />
+    <ClCompile Include="src\my_engine\physics\Collide.cpp" />
+    <ClCompile Include="src\my_engine\physics\Joint.cpp" />
+    <ClCompile Include="src\my_engine\physics\World.cpp" />
     <ClCompile Include="src\my_engine\Rigidbody.cpp" />
     <ClCompile Include="samples\main.cpp" />
     <ClCompile Include="src\box2d-lite\Arbiter.cpp" />
@@ -185,6 +190,10 @@
   <ItemGroup>
     <ClInclude Include="include\my_engine\Constant.h" />
     <ClInclude Include="include\my_engine\Component.h" />
+    <ClInclude Include="include\my_engine\physics\Arbiter.h" />
+    <ClInclude Include="include\my_engine\physics\Body.h" />
+    <ClInclude Include="include\my_engine\physics\Joint.h" />
+    <ClInclude Include="include\my_engine\physics\World.h" />
     <ClInclude Include="external\glad\include\glad\glad.h" />
     <ClInclude Include="external\glad\include\KHR\khrplatform.h" />
     <ClInclude Include="external\glfw\include\GLFW\glfw3.h" />

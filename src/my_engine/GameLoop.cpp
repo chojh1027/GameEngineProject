@@ -51,17 +51,25 @@ void GameLoop::Run()
 
         isRunning = true;
 
-        InitializeObjects();
+InitializeObjects();
 
-        auto previous = std::chrono::steady_clock::now();
+auto previous = std::chrono::steady_clock::now();
+float accumulator = 0.0f;
 
-        while (isRunning)
-        {
-                auto current = std::chrono::steady_clock::now();
-                std::chrono::duration<float> delta = current - previous;
-                previous = current;
+while (isRunning)
+{
+auto current = std::chrono::steady_clock::now();
+std::chrono::duration<float> delta = current - previous;
+previous = current;
 
-                UpdateObjects(delta.count());
+accumulator += delta.count();
+while (accumulator >= fixedDeltaTime)
+{
+FixedUpdateObjects(fixedDeltaTime);
+accumulator -= fixedDeltaTime;
+}
+
+UpdateObjects(delta.count());
 
                 if (gameObjectCount == 0)
                         isRunning = false;
@@ -97,13 +105,24 @@ void GameLoop::InitializeObjects()
 
 void GameLoop::UpdateObjects(float deltaTime)
 {
-        for (int i = 0; i < gameObjectCount; ++i)
-        {
-                if (gameObjects[i] == nullptr)
-                        continue;
+for (int i = 0; i < gameObjectCount; ++i)
+{
+if (gameObjects[i] == nullptr)
+continue;
 
-                gameObjects[i]->Update(deltaTime);
-        }
+gameObjects[i]->Update(deltaTime);
+}
+}
+
+void GameLoop::FixedUpdateObjects(float deltaTime)
+{
+for (int i = 0; i < gameObjectCount; ++i)
+{
+if (gameObjects[i] == nullptr)
+continue;
+
+gameObjects[i]->FixedUpdate(deltaTime);
+}
 }
 
 void GameLoop::ShutdownObjects()

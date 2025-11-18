@@ -2,8 +2,8 @@
 #ifndef RIGIDBODY_H
 #define RIGIDBODY_H
 
-#include "box2d-lite/Body.h"
 #include "box2d-lite/MathUtils.h"
+#include "my_engine/physics/Body.h"
 #include "my_engine/Component.h"
 
 class Rigidbody : public Component
@@ -21,10 +21,11 @@ public:
 		Circle
 	};
 
-	explicit Rigidbody(GameObject* gameObject);
+explicit Rigidbody(GameObject* gameObject);
 
-	void Init() override;
-	void Update(float deltaTime) override;
+void Init() override;
+void Update(float deltaTime) override;
+void FixedUpdate(float fixedDeltaTime) override;
 
 	void SetBodyType(BodyType type);
 	BodyType GetBodyType() const { return bodyType; }
@@ -55,7 +56,7 @@ public:
 	void SetAngularVelocity(float angularVelocity);
 	float GetAngularVelocity() const { return body.angularVelocity; }
 
-	const Body& GetBody() const { return body; }
+const my_engine::physics::Body& GetBody() const { return body; }
 
 private:
         void InitializeBody();
@@ -78,7 +79,7 @@ private:
 	Vec2 accumulatedForces = Vec2(0.0f, 0.0f);
 	float accumulatedTorque = 0.0f;
 
-	Body body;
+my_engine::physics::Body body;
 };
 
 #endif // RIGIDBODY_H

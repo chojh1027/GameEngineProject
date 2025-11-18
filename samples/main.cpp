@@ -20,21 +20,27 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-#include "box2d-lite/World.h"
-#include "box2d-lite/Body.h"
-#include "box2d-lite/Joint.h"
+#include "my_engine/physics/World.h"
+#include "my_engine/physics/Body.h"
+#include "my_engine/physics/Joint.h"
 #include "my_engine/Component.h"
 #include "my_engine/GameLoop.h"
 #include "my_engine/GameObject.h"
 
 namespace
 {
-	GLFWwindow* mainWindow = NULL;
+using my_engine::physics::Body;
+using my_engine::physics::Arbiter;
+using my_engine::physics::ArbiterKey;
+using my_engine::physics::Joint;
+using my_engine::physics::World;
 
-	Body bodies[200];
-	Joint joints[100];
+GLFWwindow* mainWindow = NULL;
+
+my_engine::physics::Body bodies[200];
+my_engine::physics::Joint joints[100];
 	
-	Body* bomb = NULL;
+my_engine::physics::Body* bomb = NULL;
 
 	float timeStep = 1.0f / 60.0f;
 	int iterations = 10;
@@ -50,7 +56,7 @@ namespace
 	float zoom = 10.0f;
 	float pan_y = 8.0f;
 
-	World world(gravity, iterations);
+my_engine::physics::World world(gravity, iterations);
 }
 
 static void glfwErrorCallback(int error, const char* description)

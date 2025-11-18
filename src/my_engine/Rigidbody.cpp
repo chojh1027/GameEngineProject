@@ -5,6 +5,8 @@
 #include "my_engine/GameObject.h"
 #include "my_engine/Transform.h"
 
+using namespace my_engine::physics;
+
 namespace
 {
 	constexpr float k_minDensity = 0.0001f;
@@ -20,40 +22,45 @@ Rigidbody::Rigidbody(GameObject* gameObject)
 
 void Rigidbody::Init()
 {
-	InitializeBody();
+InitializeBody();
 }
 
 void Rigidbody::Update(float deltaTime)
 {
-	if (bodyType == BodyType::Static || deltaTime <= 0.0f)
-		return;
+(void)deltaTime;
+}
 
-	Vec2 totalForce = accumulatedForces;
-	if (useGravity)
-	{
-		Vec2 gravity = GetGlobalGravity();
-		totalForce += (gravityScale * body.mass) * gravity;
-	}
+void Rigidbody::FixedUpdate(float deltaTime)
+{
+if (bodyType == BodyType::Static || deltaTime <= 0.0f)
+return;
 
-	Vec2 acceleration(0.0f, 0.0f);
-	if (body.mass < FLT_MAX)
-		acceleration = body.invMass * totalForce;
+Vec2 totalForce = accumulatedForces;
+if (useGravity)
+{
+Vec2 gravity = GetGlobalGravity();
+totalForce += (gravityScale * body.mass) * gravity;
+}
 
-	body.velocity += deltaTime * acceleration;
-	body.position += deltaTime * body.velocity;
+Vec2 acceleration(0.0f, 0.0f);
+if (body.mass < FLT_MAX)
+acceleration = body.invMass * totalForce;
 
-	float totalTorque = accumulatedTorque;
-	float angularAcceleration = 0.0f;
-	if (body.I < FLT_MAX && body.I > 0.0f)
-		angularAcceleration = totalTorque * body.invI;
+body.velocity += deltaTime * acceleration;
+body.position += deltaTime * body.velocity;
 
-	body.angularVelocity += deltaTime * angularAcceleration;
-	body.rotation += deltaTime * body.angularVelocity;
+float totalTorque = accumulatedTorque;
+float angularAcceleration = 0.0f;
+if (body.I < FLT_MAX && body.I > 0.0f)
+angularAcceleration = totalTorque * body.invI;
 
-	accumulatedForces.Set(0.0f, 0.0f);
-	accumulatedTorque = 0.0f;
+body.angularVelocity += deltaTime * angularAcceleration;
+body.rotation += deltaTime * body.angularVelocity;
 
-	SyncTransformFromBody();
+accumulatedForces.Set(0.0f, 0.0f);
+accumulatedTorque = 0.0f;
+
+SyncTransformFromBody();
 }
 
 void Rigidbody::SetBodyType(BodyType type)

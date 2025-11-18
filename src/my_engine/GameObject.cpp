@@ -14,9 +14,15 @@ void GameObject::Start() {
 }
 
 void GameObject::Update(float deltaTime) {
-	for (int i = 0; i < this->componentCount; i++)
-		if (components[i] != nullptr && components[i]->IsActive())
-			components[i]->Update(deltaTime);
+for (int i = 0; i < this->componentCount; i++)
+if (components[i] != nullptr && components[i]->IsActive())
+components[i]->Update(deltaTime);
+}
+
+void GameObject::FixedUpdate(float deltaTime) {
+for (int i = 0; i < this->componentCount; i++)
+if (components[i] != nullptr && components[i]->IsActive())
+components[i]->FixedUpdate(deltaTime);
 }
 
 void GameObject::Destroy() {
