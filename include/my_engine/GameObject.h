@@ -5,6 +5,8 @@
 #include "my_engine/Constant.h"
 #include "my_engine/Transform.h"
 
+class Component;
+
 
 // Transform	- Position, Rotation, Scale
 // Components	- Component array
@@ -26,10 +28,11 @@ public:
 	}
 	~GameObject() {}
 
-	void Init();
-	void Start();
-	void Update(float deltaTime);
-	void Destroy();
+void Init();
+void Start();
+void Update(float deltaTime);
+void FixedUpdate(float fixedDeltaTime);
+void Destroy();
 
 	void AddComponent(Component* component);
 

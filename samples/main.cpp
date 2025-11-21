@@ -20,21 +20,27 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-#include "box2d-lite/World.h"
-#include "box2d-lite/Body.h"
-#include "box2d-lite/Joint.h"
+#include "my_engine/physics/World.h"
+#include "my_engine/physics/Body.h"
+#include "my_engine/physics/Joint.h"
 #include "my_engine/Component.h"
 #include "my_engine/GameLoop.h"
 #include "my_engine/GameObject.h"
 
 namespace
 {
-	GLFWwindow* mainWindow = NULL;
+using my_engine::physics::Body;
+using my_engine::physics::Arbiter;
+using my_engine::physics::ArbiterKey;
+using my_engine::physics::Joint;
+using my_engine::physics::World;
 
-	Body bodies[200];
-	Joint joints[100];
+GLFWwindow* mainWindow = NULL;
+
+my_engine::physics::Body bodies[200];
+my_engine::physics::Joint joints[100];
 	
-	Body* bomb = NULL;
+my_engine::physics::Body* bomb = NULL;
 
 	float timeStep = 1.0f / 60.0f;
 	int iterations = 10;
@@ -50,7 +56,7 @@ namespace
 	float zoom = 10.0f;
 	float pan_y = 8.0f;
 
-	World world(gravity, iterations);
+my_engine::physics::World world(gravity, iterations);
 }
 
 static void glfwErrorCallback(int error, const char* description)
@@ -71,26 +77,44 @@ static void DrawText(int x, int y, const char* string)
 
 static void DrawBody(Body* body)
 {
-	Mat22 R(body->rotation);
-	Vec2 x = body->position;
-	Vec2 h = 0.5f * body->width;
+        Mat22 R(body->rotation);
+        Vec2 x = body->position;
+        Vec2 h = 0.5f * body->width;
 
-	Vec2 v1 = x + R * Vec2(-h.x, -h.y);
-	Vec2 v2 = x + R * Vec2( h.x, -h.y);
-	Vec2 v3 = x + R * Vec2( h.x,  h.y);
-	Vec2 v4 = x + R * Vec2(-h.x,  h.y);
+        if (body == bomb)
+                glColor3f(0.4f, 0.9f, 0.4f);
+        else
+                glColor3f(0.8f, 0.8f, 0.9f);
 
-	if (body == bomb)
-		glColor3f(0.4f, 0.9f, 0.4f);
-	else
-		glColor3f(0.8f, 0.8f, 0.9f);
+        if (body->shape == Body::ShapeType::Circle)
+        {
+                const int segments = 32;
+                float radius = body->radius;
 
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(v1.x, v1.y);
-	glVertex2f(v2.x, v2.y);
-	glVertex2f(v3.x, v3.y);
-	glVertex2f(v4.x, v4.y);
-	glEnd();
+                glBegin(GL_LINE_LOOP);
+                for (int i = 0; i < segments; ++i)
+                {
+                        float angle = 2.0f * k_pi * (static_cast<float>(i) / static_cast<float>(segments));
+                        float c = cosf(angle);
+                        float s = sinf(angle);
+                        Vec2 vertex = x + Vec2(c * radius, s * radius);
+                        glVertex2f(vertex.x, vertex.y);
+                }
+                glEnd();
+                return;
+        }
+
+        Vec2 v1 = x + R * Vec2(-h.x, -h.y);
+        Vec2 v2 = x + R * Vec2( h.x, -h.y);
+        Vec2 v3 = x + R * Vec2( h.x,  h.y);
+        Vec2 v4 = x + R * Vec2(-h.x,  h.y);
+
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(v1.x, v1.y);
+        glVertex2f(v2.x, v2.y);
+        glVertex2f(v3.x, v3.y);
+        glVertex2f(v4.x, v4.y);
+        glEnd();
 }
 
 static void DrawJoint(Joint* joint)
@@ -131,6 +155,37 @@ static void LaunchBomb()
 	bomb->rotation = Random(-1.5f, 1.5f);
 	bomb->velocity = -1.5f * bomb->position;
 	bomb->angularVelocity = Random(-20.0f, 20.0f);
+}
+
+// Mixed boxes and circles
+static void Demo0(Body* b, Joint* /*j*/)
+{
+	// Ground
+	b->Set(Vec2(100.0f, 20.0f), FLT_MAX);
+	b->position.Set(0.0f, -0.5f * b->width.y);
+	world.Add(b);
+	++b;
+	++numBodies;
+
+	// Box stack
+	for (int i = 0; i < 5; ++i)
+	{
+		b->Set(Vec2(1.0f, 1.0f), 10.0f);
+		b->position.Set(-6.0f + 3.0f * i, 5.0f);
+		world.Add(b);
+		++b;
+		++numBodies;
+	}
+
+	// Circle stack
+	for (int i = 0; i < 5; ++i)
+	{
+		b->Set(Vec2(1.0f, 1.0f), 10.0f, Body::ShapeType::Circle);
+		b->position.Set(-6.0f + 3.0f * i, 8.0f);
+		world.Add(b);
+		++b;
+		++numBodies;
+	}
 }
 
 // Single box
@@ -498,8 +553,9 @@ static void Demo9(Body* b, Joint* j)
 	}
 }
 
-void (*demos[])(Body* b, Joint* j) = {Demo1, Demo2, Demo3, Demo4, Demo5, Demo6, Demo7, Demo8, Demo9};
+void (*demos[])(Body* b, Joint* j) = {Demo0, Demo1, Demo2, Demo3, Demo4, Demo5, Demo6, Demo7, Demo8, Demo9};
 const char* demoStrings[] = {
+	"Demo 0: Boxes and Circles",
 	"Demo 1: A Single Box",
 	"Demo 2: Simple Pendulum",
 	"Demo 3: Varying Friction Coefficients",
@@ -535,6 +591,7 @@ static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int 
 		glfwSetWindowShouldClose(mainWindow, GL_TRUE);
 		break;
 
+	case '0':
 	case '1':
 	case '2':
 	case '3':
@@ -544,7 +601,7 @@ static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int 
 	case '7':
 	case '8':
 	case '9':
-		InitDemo(key - GLFW_KEY_1);
+		InitDemo(key - '0');
 		break;
 
 	case GLFW_KEY_A:

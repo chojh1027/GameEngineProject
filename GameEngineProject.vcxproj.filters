@@ -153,6 +153,24 @@
     <ClCompile Include="src\my_engine\GameObject.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
+    <ClCompile Include="src\my_engine\physics\Arbiter.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\physics\Body.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\physics\Collide.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\physics\Joint.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\physics\World.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\Rigidbody.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
     <ClCompile Include="src\my_engine\Component.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
@@ -172,6 +190,18 @@
     </ClInclude>
     <ClInclude Include="include\box2d-lite\MathUtils.h">
       <Filter>헤더 파일\box2d-lite</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\physics\Arbiter.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\physics\Body.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\physics\Joint.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\physics\World.h">
+      <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
     <ClInclude Include="external\imgui\backends\imgui_impl_glfw.h">
       <Filter>헤더 파일\samples</Filter>
@@ -243,6 +273,9 @@
       <Filter>헤더 파일\glfw</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\GameObject.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\Rigidbody.h">
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\Transform.h">
