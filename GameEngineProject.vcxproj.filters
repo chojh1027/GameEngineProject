@@ -165,6 +165,12 @@
     <ClCompile Include="src\my_engine\physics\Joint.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
+    <ClCompile Include="src\my_engine\physics\PhysicsManager.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\my_engine\physics\RigidBody.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
     <ClCompile Include="src\my_engine\physics\World.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
@@ -195,6 +201,12 @@
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\physics\Body.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\physics\PhysicsManager.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\physics\RigidBody.h">
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\physics\Joint.h">
