@@ -11,6 +11,12 @@ GameLoop::GameLoop()
         std::fill(std::begin(gameObjects), std::end(gameObjects), nullptr);
 }
 
+void GameLoop::SetPhysicsManager(PhysicsManager* manager)
+{
+        physicsManager = manager;
+        gPhysicsManager = manager;
+}
+
 bool GameLoop::AddGameObject(GameObject* object)
 {
         if (object == nullptr || gameObjectCount >= MAX_GAMEOBJECT_COUNT)
@@ -58,24 +64,36 @@ InitializeObjects();
 auto previous = std::chrono::steady_clock::now();
 float accumulator = 0.0f;
 
-while (isRunning)
-{
-auto current = std::chrono::steady_clock::now();
-std::chrono::duration<float> delta = current - previous;
-previous = current;
+        while (isRunning)
+        {
+                auto current = std::chrono::steady_clock::now();
+                std::chrono::duration<float> delta = current - previous;
+                previous = current;
 
-accumulator += delta.count();
-while (accumulator >= fixedDeltaTime)
-{
-FixedUpdateObjects(fixedDeltaTime);
-accumulator -= fixedDeltaTime;
-}
+                if (preFrameCallback && !preFrameCallback())
+                {
+                        Stop();
+                        break;
+                }
 
-UpdateObjects(delta.count());
+                accumulator += delta.count();
+                while (accumulator >= fixedDeltaTime)
+                {
+                        FixedUpdateObjects(fixedDeltaTime);
+                        accumulator -= fixedDeltaTime;
+                }
+
+                UpdateObjects(delta.count());
+
+                if (postFrameCallback)
+                        postFrameCallback(delta.count());
 
                 if (gameObjectCount == 0)
                         isRunning = false;
         }
+
+        if (shutdownCallback)
+                shutdownCallback();
 
         ShutdownObjects();
         ClearObjects();

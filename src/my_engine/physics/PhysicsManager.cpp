@@ -10,6 +10,8 @@ bool Contains(const std::vector<physics::Body*>& bodies, const physics::Body* bo
 }
 } // namespace
 
+PhysicsManager* gPhysicsManager = nullptr;
+
 PhysicsManager::PhysicsManager(Vec2 gravity, int iterations)
     : world(gravity, iterations)
 {

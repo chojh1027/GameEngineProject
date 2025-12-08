@@ -4,14 +4,12 @@
 
 #include "my_engine/Component.h"
 #include "my_engine/physics/Body.h"
-
-class PhysicsManager;
+#include "my_engine/physics/PhysicsManager.h"
 
 class RigidBody : public Component
 {
 public:
     RigidBody(GameObject* owner,
-              PhysicsManager& manager,
               const Vec2& size,
               float mass,
               physics::Body::ShapeType shape = physics::Body::ShapeType::Box,
@@ -37,7 +35,6 @@ private:
     void UnregisterBody();
     void SyncTransform();
 
-    PhysicsManager& physicsManager;
     physics::Body body;
     Vec2 size;
     float mass;

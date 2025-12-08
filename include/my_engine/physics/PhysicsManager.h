@@ -29,4 +29,6 @@ private:
     std::vector<physics::Body*> bodies;
 };
 
+extern PhysicsManager* gPhysicsManager;
+
 #endif // MY_ENGINE_PHYSICS_MANAGER_H
