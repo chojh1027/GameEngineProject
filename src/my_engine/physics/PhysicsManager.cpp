@@ -8,6 +8,11 @@ bool Contains(const std::vector<physics::Body*>& bodies, const physics::Body* bo
 {
     return std::find(bodies.begin(), bodies.end(), body) != bodies.end();
 }
+
+bool Contains(const std::vector<physics::Joint*>& joints, const physics::Joint* joint)
+{
+    return std::find(joints.begin(), joints.end(), joint) != joints.end();
+}
 } // namespace
 
 PhysicsManager* gPhysicsManager = nullptr;
@@ -35,6 +40,24 @@ void PhysicsManager::UnregisterBody(physics::Body* body)
     RemoveBodyFromWorld(body);
 }
 
+void PhysicsManager::RegisterJoint(physics::Joint* joint)
+{
+    if (joint == nullptr || Contains(joints, joint))
+        return;
+
+    joints.push_back(joint);
+    world.Add(joint);
+}
+
+void PhysicsManager::UnregisterJoint(physics::Joint* joint)
+{
+    if (joint == nullptr)
+        return;
+
+    joints.erase(std::remove(joints.begin(), joints.end(), joint), joints.end());
+    RemoveJointFromWorld(joint);
+}
+
 void PhysicsManager::Step(float deltaTime)
 {
     world.Step(deltaTime);
@@ -50,6 +73,14 @@ void PhysicsManager::RebuildWorld()
             continue;
 
         world.Add(body);
+    }
+
+    for (physics::Joint* joint : joints)
+    {
+        if (joint == nullptr)
+            continue;
+
+        world.Add(joint);
     }
 }
 
@@ -69,4 +100,9 @@ void PhysicsManager::RemoveBodyFromWorld(physics::Body* body)
             ++iter;
         }
     }
+}
+
+void PhysicsManager::RemoveJointFromWorld(physics::Joint* joint)
+{
+    world.joints.erase(std::remove(world.joints.begin(), world.joints.end(), joint), world.joints.end());
 }

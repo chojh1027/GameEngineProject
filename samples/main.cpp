@@ -18,26 +18,27 @@
 #include "GLFW/glfw3.h"
 
 #include "RenderingSystem.h"
-#include "StageComponents.h"
 #include "my_engine/Component.h"
 #include "my_engine/GameLoop.h"
 #include "my_engine/GameObject.h"
 #include "my_engine/physics/PhysicsManager.h"
 #include "my_engine/physics/RigidBody.h"
+#include "my_engine/physics/Joint.h"
 
 namespace
 {
 using physics::Body;
 
-constexpr int kCircleStackCount = 5;
+constexpr int kLinkCount = 6;
 constexpr float kGroundWidth = 100.0f;
 constexpr float kGroundHeight = 20.0f;
 constexpr float kGroundYOffset = -0.5f;
+constexpr float kLinkSpacing = 3.0f;
+constexpr float kStartX = -7.5f;
+constexpr float kStartY = 10.0f;
+constexpr float kBoxSize = 1.0f;
 constexpr float kCircleRadius = 1.0f;
-constexpr float kCircleMass = 10.0f;
-constexpr float kCircleStartY = 8.0f;
-constexpr float kCircleStartX = -6.0f;
-constexpr float kCircleSpacing = 3.0f;
+constexpr float kDynamicMass = 5.0f;
 
 GLFWwindow* mainWindow = NULL;
 
@@ -146,42 +147,19 @@ int main(int, char**)
         Reshape(mainWindow, width, height);
 
         FrameRenderer frameRenderer(mainWindow);
-        if (!frameRenderer.Initialize())
-        {
-                fprintf(stderr, "Failed to initialize renderer.\n");
-                glfwTerminate();
-                return -1;
-        }
-
         PhysicsManager physicsManager(Vec2(0.0f, -10.0f), 10);
 
         GameLoop gameLoop;
         gameLoop.SetPhysicsManager(&physicsManager);
-
-        gameLoop.SetPreFrameCallback([&]() { return frameRenderer.BeginFrame(); });
-        gameLoop.SetPostFrameCallback([&](float deltaTime) {
-                frameRenderer.RenderOverlay(deltaTime);
-                frameRenderer.FinishFrame();
-        });
-        gameLoop.SetShutdownCallback([&]() { frameRenderer.Shutdown(); });
+        gameLoop.SetRenderer(&frameRenderer);
 
         std::vector<std::unique_ptr<GameObject>> ownedObjects;
         std::vector<std::unique_ptr<Component>> ownedComponents;
+        std::vector<std::unique_ptr<physics::Joint>> ownedJoints;
         std::vector<RigidBody*> stageBodies;
+        std::vector<RigidBody*> chainBodies;
 
-        auto stageControllerObject = std::make_unique<GameObject>();
-        auto stageController = std::make_unique<StageController>(stageControllerObject.get(), stageBodies, gResetRequested);
-        stageControllerObject->AddComponent(stageController.get());
-
-        if (!gameLoop.AddGameObject(stageControllerObject.get()))
-        {
-                fprintf(stderr, "Failed to register stage controller with the game loop.\n");
-                glfwTerminate();
-                return -1;
-        }
-
-        ownedComponents.push_back(std::move(stageController));
-        ownedObjects.push_back(std::move(stageControllerObject));
+        gameLoop.SetResetTargets(&stageBodies, &gResetRequested);
 
         auto groundObject = std::make_unique<GameObject>();
         auto groundBody = std::make_unique<RigidBody>(groundObject.get(),
@@ -193,6 +171,7 @@ int main(int, char**)
         groundObject->AddComponent(groundBody.get());
         groundObject->AddComponent(groundRenderer.get());
         stageBodies.push_back(groundBody.get());
+        chainBodies.push_back(groundBody.get());
 
         if (!gameLoop.AddGameObject(groundObject.get()))
         {
@@ -205,30 +184,43 @@ int main(int, char**)
         ownedComponents.push_back(std::move(groundRenderer));
         ownedObjects.push_back(std::move(groundObject));
 
-        for (int i = 0; i < kCircleStackCount; ++i)
+        for (int i = 0; i < kLinkCount; ++i)
         {
-                Vec2 position(kCircleStartX + kCircleSpacing * i, kCircleStartY);
-                auto circleObject = std::make_unique<GameObject>();
-                auto circleBody = std::make_unique<RigidBody>(circleObject.get(),
-                                                              Vec2(kCircleRadius, kCircleRadius),
-                                                              kCircleMass,
-                                                              physics::Body::ShapeType::Circle,
-                                                              position);
-                auto circleRenderer = std::make_unique<BodyRenderer>(circleObject.get(), *circleBody);
-                circleObject->AddComponent(circleBody.get());
-                circleObject->AddComponent(circleRenderer.get());
-                stageBodies.push_back(circleBody.get());
+                bool useCircle = (i % 2) == 0;
+                Vec2 size = useCircle ? Vec2(kCircleRadius, kCircleRadius) : Vec2(kBoxSize, kBoxSize);
+                physics::Body::ShapeType shape = useCircle ? physics::Body::ShapeType::Circle : physics::Body::ShapeType::Box;
+                Vec2 position(kStartX + kLinkSpacing * i, kStartY);
 
-                if (!gameLoop.AddGameObject(circleObject.get()))
+                auto linkObject = std::make_unique<GameObject>();
+                auto linkBody = std::make_unique<RigidBody>(linkObject.get(), size, kDynamicMass, shape, position);
+                auto linkRenderer = std::make_unique<BodyRenderer>(linkObject.get(), *linkBody);
+                linkObject->AddComponent(linkBody.get());
+                linkObject->AddComponent(linkRenderer.get());
+                stageBodies.push_back(linkBody.get());
+                chainBodies.push_back(linkBody.get());
+
+                if (!gameLoop.AddGameObject(linkObject.get()))
                 {
                         fprintf(stderr, "Failed to register stage object with the game loop.\n");
                         glfwTerminate();
                         return -1;
                 }
 
-                ownedComponents.push_back(std::move(circleBody));
-                ownedComponents.push_back(std::move(circleRenderer));
-                ownedObjects.push_back(std::move(circleObject));
+                ownedComponents.push_back(std::move(linkBody));
+                ownedComponents.push_back(std::move(linkRenderer));
+                ownedObjects.push_back(std::move(linkObject));
+        }
+
+        for (size_t i = 1; i < chainBodies.size(); ++i)
+        {
+                physics::Body* bodyA = chainBodies[i - 1]->GetBody();
+                physics::Body* bodyB = chainBodies[i]->GetBody();
+                Vec2 anchor = (bodyA->position + bodyB->position) * 0.5f;
+
+                auto joint = std::make_unique<physics::Joint>();
+                joint->Set(bodyA, bodyB, anchor);
+                physicsManager.RegisterJoint(joint.get());
+                ownedJoints.push_back(std::move(joint));
         }
 
         gameLoop.Run();

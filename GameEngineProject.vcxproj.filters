@@ -90,9 +90,6 @@
     <ClCompile Include="samples\RenderingSystem.cpp">
       <Filter>소스 파일\samples</Filter>
     </ClCompile>
-    <ClCompile Include="samples\StageComponents.cpp">
-      <Filter>소스 파일\samples</Filter>
-    </ClCompile>
     <ClCompile Include="samples\main.cpp">
       <Filter>소스 파일\samples</Filter>
     </ClCompile>
@@ -225,9 +222,6 @@
       <Filter>헤더 파일\samples</Filter>
     </ClInclude>
     <ClInclude Include="samples\RenderingSystem.h">
-      <Filter>헤더 파일\samples</Filter>
-    </ClInclude>
-    <ClInclude Include="samples\StageComponents.h">
       <Filter>헤더 파일\samples</Filter>
     </ClInclude>
     <ClInclude Include="external\glad\include\glad\glad.h">

@@ -1,10 +1,12 @@
 #include "my_engine/GameLoop.h"
 
-#include "my_engine/physics/PhysicsManager.h"
-
 #include <algorithm>
 #include <chrono>
 #include <iterator>
+
+#include "my_engine/physics/PhysicsManager.h"
+#include "../../samples/RenderingSystem.h"
+#include "my_engine/physics/RigidBody.h"
 
 GameLoop::GameLoop()
 {
@@ -15,6 +17,17 @@ void GameLoop::SetPhysicsManager(PhysicsManager* manager)
 {
         physicsManager = manager;
         gPhysicsManager = manager;
+}
+
+void GameLoop::SetRenderer(FrameRenderer* renderer)
+{
+        frameRenderer = renderer;
+}
+
+void GameLoop::SetResetTargets(std::vector<RigidBody*>* bodies, bool* resetFlag)
+{
+        resetBodies = bodies;
+        resetRequested = resetFlag;
 }
 
 bool GameLoop::AddGameObject(GameObject* object)
@@ -59,10 +72,18 @@ void GameLoop::Run()
 
         isRunning = true;
 
-InitializeObjects();
+        InitializeObjects();
 
-auto previous = std::chrono::steady_clock::now();
-float accumulator = 0.0f;
+        if (frameRenderer != nullptr && !frameRenderer->Initialize())
+        {
+                isRunning = false;
+                ShutdownObjects();
+                ClearObjects();
+                return;
+        }
+
+        auto previous = std::chrono::steady_clock::now();
+        float accumulator = 0.0f;
 
         while (isRunning)
         {
@@ -70,10 +91,26 @@ float accumulator = 0.0f;
                 std::chrono::duration<float> delta = current - previous;
                 previous = current;
 
-                if (preFrameCallback && !preFrameCallback())
+                if (frameRenderer != nullptr && !frameRenderer->BeginFrame())
                 {
                         Stop();
                         break;
+                }
+
+                if (resetRequested != nullptr && resetBodies != nullptr && *resetRequested)
+                {
+                        for (RigidBody* body : *resetBodies)
+                        {
+                                if (body == nullptr)
+                                        continue;
+
+                                body->Reset();
+                        }
+
+                        if (physicsManager != nullptr)
+                                physicsManager->RebuildWorld();
+
+                        *resetRequested = false;
                 }
 
                 accumulator += delta.count();
@@ -85,15 +122,18 @@ float accumulator = 0.0f;
 
                 UpdateObjects(delta.count());
 
-                if (postFrameCallback)
-                        postFrameCallback(delta.count());
+                if (frameRenderer != nullptr)
+                {
+                        frameRenderer->RenderOverlay(delta.count());
+                        frameRenderer->FinishFrame();
+                }
 
                 if (gameObjectCount == 0)
                         isRunning = false;
         }
 
-        if (shutdownCallback)
-                shutdownCallback();
+        if (frameRenderer != nullptr)
+                frameRenderer->Shutdown();
 
         ShutdownObjects();
         ClearObjects();

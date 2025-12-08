@@ -181,7 +181,6 @@
     <ClCompile Include="src\my_engine\physics\RigidBody.cpp" />
     <ClCompile Include="src\my_engine\physics\World.cpp" />
     <ClCompile Include="samples\RenderingSystem.cpp" />
-    <ClCompile Include="samples\StageComponents.cpp" />
     <ClCompile Include="samples\main.cpp" />
     <ClCompile Include="src\box2d-lite\Arbiter.cpp" />
     <ClCompile Include="src\box2d-lite\Body.cpp" />
@@ -231,7 +230,6 @@
     <ClInclude Include="include\my_engine\GameObject.h" />
     <ClInclude Include="include\my_engine\Transform.h" />
     <ClInclude Include="samples\RenderingSystem.h" />
-    <ClInclude Include="samples\StageComponents.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
