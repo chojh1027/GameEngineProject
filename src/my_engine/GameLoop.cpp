@@ -1,5 +1,7 @@
 #include "my_engine/GameLoop.h"
 
+#include "my_engine/physics/PhysicsManager.h"
+
 #include <algorithm>
 #include <chrono>
 #include <iterator>
@@ -116,6 +118,9 @@ gameObjects[i]->Update(deltaTime);
 
 void GameLoop::FixedUpdateObjects(float deltaTime)
 {
+if (physicsManager != nullptr)
+physicsManager->Step(deltaTime);
+
 for (int i = 0; i < gameObjectCount; ++i)
 {
 if (gameObjects[i] == nullptr)

@@ -16,36 +16,25 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-#include "my_engine/physics/World.h"
-#include "my_engine/physics/Body.h"
-#include "my_engine/physics/Joint.h"
+#include "my_engine/physics/PhysicsManager.h"
 #include "my_engine/Component.h"
 #include "my_engine/GameLoop.h"
 #include "my_engine/GameObject.h"
 
 namespace
 {
-using physics::Body;
 using physics::Arbiter;
 using physics::ArbiterKey;
-using physics::World;
+using physics::Body;
 
 GLFWwindow* mainWindow = NULL;
 
-physics::Body bodies[200];
-
-float timeStep = 1.0f / 60.0f;
-int iterations = 10;
-Vec2 gravity(0.0f, -10.0f);
-
-int numBodies = 0;
-
-int width = 1280;
-int height = 720;
 float zoom = 10.0f;
 float pan_y = 8.0f;
+int width = 1280;
+int height = 720;
 
-physics::World world(gravity, iterations);
+PhysicsManager* gPhysicsManager = nullptr;
 }
 
 static void glfwErrorCallback(int error, const char* description)
@@ -64,18 +53,18 @@ static void DrawText(int x, int y, const char* string)
         ImGui::End();
 }
 
-static void DrawBody(Body* body)
+static void DrawBody(const Body& body)
 {
-        Mat22 R(body->rotation);
-        Vec2 x = body->position;
-        Vec2 h = 0.5f * body->width;
+        Mat22 R(body.rotation);
+        Vec2 x = body.position;
+        Vec2 h = 0.5f * body.width;
 
         glColor3f(0.8f, 0.8f, 0.9f);
 
-        if (body->shape == Body::ShapeType::Circle)
+        if (body.shape == Body::ShapeType::Circle)
         {
                 const int segments = 32;
-                float radius = body->radius;
+                float radius = body.radius;
 
                 glBegin(GL_LINE_LOOP);
                 for (int i = 0; i < segments; ++i)
@@ -103,34 +92,6 @@ static void DrawBody(Body* body)
         glEnd();
 }
 
-static void SetupCircleStage(Body* b)
-{
-        // Ground
-        b->Set(Vec2(100.0f, 20.0f), FLT_MAX);
-        b->position.Set(0.0f, -0.5f * b->width.y);
-        world.Add(b);
-        ++b;
-        ++numBodies;
-
-        // Circle stack
-        for (int i = 0; i < 5; ++i)
-        {
-                b->Set(Vec2(1.0f, 1.0f), 10.0f, Body::ShapeType::Circle);
-                b->position.Set(-6.0f + 3.0f * i, 8.0f);
-                world.Add(b);
-                ++b;
-                ++numBodies;
-        }
-}
-
-static void InitCircleStage()
-{
-        world.Clear();
-        numBodies = 0;
-
-        SetupCircleStage(bodies);
-}
-
 static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
         if (action != GLFW_PRESS)
@@ -146,19 +107,20 @@ static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int 
                 break;
 
         case GLFW_KEY_A:
-                World::accumulateImpulses = !World::accumulateImpulses;
+                physics::World::accumulateImpulses = !physics::World::accumulateImpulses;
                 break;
 
         case GLFW_KEY_P:
-                World::positionCorrection = !World::positionCorrection;
+                physics::World::positionCorrection = !physics::World::positionCorrection;
                 break;
 
         case GLFW_KEY_W:
-                World::warmStarting = !World::warmStarting;
+                physics::World::warmStarting = !physics::World::warmStarting;
                 break;
 
         case GLFW_KEY_R:
-                InitCircleStage();
+                if (gPhysicsManager != nullptr)
+                        gPhysicsManager->InitializeCircleStage();
                 break;
         }
 }
@@ -185,10 +147,10 @@ static void Reshape(GLFWwindow*, int w, int h)
         }
 }
 
-class Box2DSampleComponent : public Component
+class FrameControllerComponent : public Component
 {
 public:
-        Box2DSampleComponent(GameObject* owner, GameLoop& loopRef, GLFWwindow* windowPtr)
+        FrameControllerComponent(GameObject* owner, GameLoop& loopRef, GLFWwindow* windowPtr)
                 : Component(owner)
                 , loop(loopRef)
                 , window(windowPtr)
@@ -197,6 +159,8 @@ public:
 
         void Update(float deltaTime) override
         {
+                (void)deltaTime;
+
                 if (window == nullptr)
                 {
                         loop.Stop();
@@ -214,31 +178,43 @@ public:
                 ImGui_ImplOpenGL2_NewFrame();
                 ImGui_ImplGlfw_NewFrame();
                 ImGui::NewFrame();
+        }
 
-                ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f));
-                ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
-                ImGui::End();
+private:
+        GameLoop& loop;
+        GLFWwindow* window;
+};
 
-                DrawText(5, 5, "Circle Stage");
-                DrawText(5, 35, "Keys: R Reset, A Accumulation, P Position Correction, W Warm Starting");
+class Renderer : public Component
+{
+public:
+        Renderer(GameObject* owner, const PhysicsManager& physicsManagerRef)
+                : Component(owner)
+                , physicsManager(physicsManagerRef)
+        {
+        }
 
-                char buffer[64];
-                snprintf(buffer, sizeof(buffer), "Delta Time: %.3f", deltaTime);
-                DrawText(5, 65, buffer);
+        void Update(float deltaTime) override
+        {
+                (void)deltaTime;
 
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
 
-                const float step = deltaTime > 0.0f ? deltaTime : timeStep;
-                world.Step(step);
+                const auto& bodies = physicsManager.GetBodies();
+                for (const auto& body : bodies)
+                {
+                        if (body == nullptr)
+                                continue;
 
-                for (int i = 0; i < numBodies; ++i)
-                        DrawBody(bodies + i);
+                        DrawBody(*body);
+                }
 
                 glPointSize(4.0f);
                 glColor3f(1.0f, 0.0f, 0.0f);
                 glBegin(GL_POINTS);
                 std::map<ArbiterKey, Arbiter>::const_iterator iter;
+                const auto& world = physicsManager.GetWorld();
                 for (iter = world.arbiters.begin(); iter != world.arbiters.end(); ++iter)
                 {
                         const Arbiter& arbiter = iter->second;
@@ -250,6 +226,29 @@ public:
                 }
                 glEnd();
                 glPointSize(1.0f);
+        }
+
+private:
+        const PhysicsManager& physicsManager;
+};
+
+class UIRenderer : public Component
+{
+public:
+        UIRenderer(GameObject* owner, GLFWwindow* windowPtr)
+                : Component(owner)
+                , window(windowPtr)
+        {
+        }
+
+        void Update(float deltaTime) override
+        {
+                DrawText(5, 5, "Circle Stage");
+                DrawText(5, 35, "Keys: R Reset, A Accumulation, P Position Correction, W Warm Starting");
+
+                char buffer[64];
+                snprintf(buffer, sizeof(buffer), "Delta Time: %.3f", deltaTime);
+                DrawText(5, 65, buffer);
 
                 ImGui::Render();
                 ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
@@ -266,7 +265,6 @@ public:
         }
 
 private:
-        GameLoop& loop;
         GLFWwindow* window;
 };
 
@@ -331,12 +329,20 @@ int main(int, char**)
                 glOrtho(-zoom, zoom, -zoom / aspect + pan_y, zoom / aspect + pan_y, -1.0, 1.0);
         }
 
-        InitCircleStage();
+        PhysicsManager physicsManager(Vec2(0.0f, -10.0f), 10);
+        gPhysicsManager = &physicsManager;
+        physicsManager.InitializeCircleStage();
 
         GameLoop gameLoop;
+        gameLoop.SetPhysicsManager(&physicsManager);
+
         GameObject gameWorld;
-        Box2DSampleComponent sampleComponent(&gameWorld, gameLoop, mainWindow);
-        gameWorld.AddComponent(&sampleComponent);
+        FrameControllerComponent frameController(&gameWorld, gameLoop, mainWindow);
+        Renderer renderer(&gameWorld, physicsManager);
+        UIRenderer uiRenderer(&gameWorld, mainWindow);
+        gameWorld.AddComponent(&frameController);
+        gameWorld.AddComponent(&renderer);
+        gameWorld.AddComponent(&uiRenderer);
 
         if (!gameLoop.AddGameObject(&gameWorld))
         {
