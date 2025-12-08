@@ -12,10 +12,11 @@ public:
 	Component(GameObject* gameObject);
 	~Component();
 
-	virtual void Init() {}
-	virtual void Start() {}
-	virtual void Update(float deltaTime) {}
-	virtual void Destroy() {}
+virtual void Init() {}
+virtual void Start() {}
+virtual void Update(float deltaTime) {}
+virtual void FixedUpdate(float fixedDeltaTime) {}
+virtual void Destroy() {}
 
 	void SetActive(bool active) { isActive = active; }
 	bool IsActive() const { return isActive; }
