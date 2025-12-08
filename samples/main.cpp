@@ -4,9 +4,10 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <float.h>
-#include <map>
 #include <math.h>
+#include <memory>
 #include <stdio.h>
+#include <vector>
 
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_glfw.h"
@@ -16,16 +17,25 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-#include "my_engine/physics/PhysicsManager.h"
 #include "my_engine/Component.h"
 #include "my_engine/GameLoop.h"
 #include "my_engine/GameObject.h"
+#include "my_engine/physics/PhysicsManager.h"
+#include "my_engine/physics/RigidBody.h"
 
 namespace
 {
-using physics::Arbiter;
-using physics::ArbiterKey;
 using physics::Body;
+
+constexpr int kCircleStackCount = 5;
+constexpr float kGroundWidth = 100.0f;
+constexpr float kGroundHeight = 20.0f;
+constexpr float kGroundYOffset = -0.5f;
+constexpr float kCircleRadius = 1.0f;
+constexpr float kCircleMass = 10.0f;
+constexpr float kCircleStartY = 8.0f;
+constexpr float kCircleStartX = -6.0f;
+constexpr float kCircleSpacing = 3.0f;
 
 GLFWwindow* mainWindow = NULL;
 
@@ -34,8 +44,8 @@ float pan_y = 8.0f;
 int width = 1280;
 int height = 720;
 
-PhysicsManager* gPhysicsManager = nullptr;
-}
+bool gResetRequested = false;
+} // namespace
 
 static void glfwErrorCallback(int error, const char* description)
 {
@@ -94,6 +104,10 @@ static void DrawBody(const Body& body)
 
 static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+        (void)window;
+        (void)scancode;
+        (void)mods;
+
         if (action != GLFW_PRESS)
         {
                 return;
@@ -102,7 +116,6 @@ static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int 
         switch (key)
         {
         case GLFW_KEY_ESCAPE:
-                // Quit
                 glfwSetWindowShouldClose(mainWindow, GL_TRUE);
                 break;
 
@@ -119,8 +132,7 @@ static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int 
                 break;
 
         case GLFW_KEY_R:
-                if (gPhysicsManager != nullptr)
-                        gPhysicsManager->InitializeCircleStage();
+                gResetRequested = true;
                 break;
         }
 }
@@ -185,12 +197,12 @@ private:
         GLFWwindow* window;
 };
 
-class Renderer : public Component
+class BodyRenderer : public Component
 {
 public:
-        Renderer(GameObject* owner, const PhysicsManager& physicsManagerRef)
+        BodyRenderer(GameObject* owner, const RigidBody& rigidBodyRef)
                 : Component(owner)
-                , physicsManager(physicsManagerRef)
+                , rigidBody(rigidBodyRef)
         {
         }
 
@@ -198,38 +210,18 @@ public:
         {
                 (void)deltaTime;
 
+                const physics::Body* body = rigidBody.GetBody();
+                if (body == nullptr)
+                        return;
+
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
 
-                const auto& bodies = physicsManager.GetBodies();
-                for (const auto& body : bodies)
-                {
-                        if (body == nullptr)
-                                continue;
-
-                        DrawBody(*body);
-                }
-
-                glPointSize(4.0f);
-                glColor3f(1.0f, 0.0f, 0.0f);
-                glBegin(GL_POINTS);
-                std::map<ArbiterKey, Arbiter>::const_iterator iter;
-                const auto& world = physicsManager.GetWorld();
-                for (iter = world.arbiters.begin(); iter != world.arbiters.end(); ++iter)
-                {
-                        const Arbiter& arbiter = iter->second;
-                        for (int i = 0; i < arbiter.numContacts; ++i)
-                        {
-                                Vec2 p = arbiter.contacts[i].position;
-                                glVertex2f(p.x, p.y);
-                        }
-                }
-                glEnd();
-                glPointSize(1.0f);
+                DrawBody(*body);
         }
 
 private:
-        const PhysicsManager& physicsManager;
+        const RigidBody& rigidBody;
 };
 
 class UIRenderer : public Component
@@ -267,6 +259,99 @@ public:
 private:
         GLFWwindow* window;
 };
+
+class StageController : public Component
+{
+public:
+        StageController(GameObject* owner, PhysicsManager& manager, std::vector<RigidBody*>& rigidBodiesRef)
+                : Component(owner)
+                , physicsManager(manager)
+                , rigidBodies(rigidBodiesRef)
+        {
+        }
+
+        void Update(float deltaTime) override
+        {
+                (void)deltaTime;
+
+                if (!gResetRequested)
+                        return;
+
+                for (RigidBody* body : rigidBodies)
+                {
+                        if (body == nullptr)
+                                continue;
+
+                        body->Reset();
+                }
+
+                physicsManager.RebuildWorld();
+                gResetRequested = false;
+        }
+
+private:
+        PhysicsManager& physicsManager;
+        std::vector<RigidBody*>& rigidBodies;
+};
+
+struct StageObject
+{
+        std::unique_ptr<GameObject> object;
+        std::vector<std::unique_ptr<Component>> components;
+        RigidBody* rigidBody = nullptr;
+};
+
+static StageObject CreateBodyObject(PhysicsManager& physicsManager,
+                                    physics::Body::ShapeType shape,
+                                    const Vec2& size,
+                                    float mass,
+                                    const Vec2& position)
+{
+        StageObject stageObject;
+        stageObject.object = std::make_unique<GameObject>();
+
+        auto rigidBody = std::make_unique<RigidBody>(stageObject.object.get(), physicsManager, size, mass, shape, position);
+        stageObject.rigidBody = rigidBody.get();
+        stageObject.object->AddComponent(stageObject.rigidBody);
+
+        auto renderer = std::make_unique<BodyRenderer>(stageObject.object.get(), *stageObject.rigidBody);
+        stageObject.object->AddComponent(renderer.get());
+
+        stageObject.components.push_back(std::move(rigidBody));
+        stageObject.components.push_back(std::move(renderer));
+
+        return stageObject;
+}
+
+static void BuildCircleStage(PhysicsManager& physicsManager,
+                             std::vector<StageObject>& stageObjects,
+                             std::vector<RigidBody*>& stageBodies)
+{
+        stageObjects.clear();
+        stageBodies.clear();
+        stageObjects.reserve(static_cast<size_t>(kCircleStackCount) + 1);
+        stageBodies.reserve(static_cast<size_t>(kCircleStackCount) + 1);
+
+        StageObject ground = CreateBodyObject(physicsManager,
+                                              physics::Body::ShapeType::Box,
+                                              Vec2(kGroundWidth, kGroundHeight),
+                                              FLT_MAX,
+                                              Vec2(0.0f, kGroundYOffset * kGroundHeight));
+        stageBodies.push_back(ground.rigidBody);
+        stageObjects.push_back(std::move(ground));
+
+        for (int i = 0; i < kCircleStackCount; ++i)
+        {
+                Vec2 position(kCircleStartX + kCircleSpacing * i, kCircleStartY);
+                StageObject circle = CreateBodyObject(physicsManager,
+                                                      physics::Body::ShapeType::Circle,
+                                                      Vec2(kCircleRadius, kCircleRadius),
+                                                      kCircleMass,
+                                                      position);
+                stageBodies.push_back(circle.rigidBody);
+                stageObjects.push_back(std::move(circle));
+        }
+}
 
 int main(int, char**)
 {
@@ -330,23 +415,54 @@ int main(int, char**)
         }
 
         PhysicsManager physicsManager(Vec2(0.0f, -10.0f), 10);
-        gPhysicsManager = &physicsManager;
-        physicsManager.InitializeCircleStage();
 
         GameLoop gameLoop;
         gameLoop.SetPhysicsManager(&physicsManager);
 
-        GameObject gameWorld;
-        FrameControllerComponent frameController(&gameWorld, gameLoop, mainWindow);
-        Renderer renderer(&gameWorld, physicsManager);
-        UIRenderer uiRenderer(&gameWorld, mainWindow);
-        gameWorld.AddComponent(&frameController);
-        gameWorld.AddComponent(&renderer);
-        gameWorld.AddComponent(&uiRenderer);
+        GameObject frameControllerObject;
+        FrameControllerComponent frameController(&frameControllerObject, gameLoop, mainWindow);
+        frameControllerObject.AddComponent(&frameController);
 
-        if (!gameLoop.AddGameObject(&gameWorld))
+        std::vector<StageObject> stageObjects;
+        std::vector<RigidBody*> stageBodies;
+
+        GameObject stageControllerObject;
+        StageController stageController(&stageControllerObject, physicsManager, stageBodies);
+        stageControllerObject.AddComponent(&stageController);
+
+        BuildCircleStage(physicsManager, stageObjects, stageBodies);
+
+        GameObject uiObject;
+        UIRenderer uiRenderer(&uiObject, mainWindow);
+        uiObject.AddComponent(&uiRenderer);
+
+        if (!gameLoop.AddGameObject(&frameControllerObject))
         {
-                fprintf(stderr, "Failed to register game object with the game loop.\n");
+                fprintf(stderr, "Failed to register frame controller with the game loop.\n");
+                glfwTerminate();
+                return -1;
+        }
+
+        if (!gameLoop.AddGameObject(&stageControllerObject))
+        {
+                fprintf(stderr, "Failed to register stage controller with the game loop.\n");
+                glfwTerminate();
+                return -1;
+        }
+
+        for (StageObject& stageObject : stageObjects)
+        {
+                if (!gameLoop.AddGameObject(stageObject.object.get()))
+                {
+                        fprintf(stderr, "Failed to register stage object with the game loop.\n");
+                        glfwTerminate();
+                        return -1;
+                }
+        }
+
+        if (!gameLoop.AddGameObject(&uiObject))
+        {
+                fprintf(stderr, "Failed to register UI renderer with the game loop.\n");
                 glfwTerminate();
                 return -1;
         }
