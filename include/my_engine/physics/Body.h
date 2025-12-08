@@ -14,7 +14,7 @@
 
 #include "box2d-lite/MathUtils.h"
 
-namespace my_engine::physics
+namespace physics
 {
 
 struct Body

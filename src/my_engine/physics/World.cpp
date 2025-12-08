@@ -13,7 +13,7 @@
 #include "my_engine/physics/Body.h"
 #include "my_engine/physics/Joint.h"
 
-namespace my_engine::physics
+namespace physics
 {
 
 using std::vector;

@@ -19,7 +19,7 @@
 #include "my_engine/physics/Arbiter.h"
 #include "my_engine/physics/Joint.h"
 
-namespace my_engine::physics
+namespace physics
 {
 
 struct World

@@ -5,7 +5,7 @@
 #include "my_engine/GameObject.h"
 #include "my_engine/Transform.h"
 
-using namespace my_engine::physics;
+using namespace physics;
 
 namespace
 {

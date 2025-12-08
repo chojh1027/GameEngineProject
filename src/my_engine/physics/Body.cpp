@@ -11,7 +11,7 @@
 
 #include "my_engine/physics/Body.h"
 
-namespace my_engine::physics
+namespace physics
 {
 
 Body::Body()

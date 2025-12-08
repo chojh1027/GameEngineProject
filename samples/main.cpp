@@ -29,18 +29,18 @@
 
 namespace
 {
-using my_engine::physics::Body;
-using my_engine::physics::Arbiter;
-using my_engine::physics::ArbiterKey;
-using my_engine::physics::Joint;
-using my_engine::physics::World;
+using physics::Body;
+using physics::Arbiter;
+using physics::ArbiterKey;
+using physics::Joint;
+using physics::World;
 
 GLFWwindow* mainWindow = NULL;
 
-my_engine::physics::Body bodies[200];
-my_engine::physics::Joint joints[100];
+physics::Body bodies[200];
+physics::Joint joints[100];
 	
-my_engine::physics::Body* bomb = NULL;
+physics::Body* bomb = NULL;
 
 	float timeStep = 1.0f / 60.0f;
 	int iterations = 10;
@@ -56,7 +56,7 @@ my_engine::physics::Body* bomb = NULL;
 	float zoom = 10.0f;
 	float pan_y = 8.0f;
 
-my_engine::physics::World world(gravity, iterations);
+physics::World world(gravity, iterations);
 }
 
 static void glfwErrorCallback(int error, const char* description)

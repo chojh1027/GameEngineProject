@@ -12,7 +12,7 @@
 #include "my_engine/physics/Arbiter.h"
 #include "my_engine/physics/Body.h"
 
-namespace my_engine::physics
+namespace physics
 {
 
 // Box vertex and edge numbering:

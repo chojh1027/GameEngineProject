@@ -13,7 +13,7 @@
 #include "my_engine/physics/Body.h"
 #include "my_engine/physics/World.h"
 
-namespace my_engine::physics
+namespace physics
 {
 
 void Joint::Set(Body* b1, Body* b2, const Vec2& anchor)

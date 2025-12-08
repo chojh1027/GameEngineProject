@@ -56,7 +56,7 @@ void FixedUpdate(float fixedDeltaTime) override;
 	void SetAngularVelocity(float angularVelocity);
 	float GetAngularVelocity() const { return body.angularVelocity; }
 
-const my_engine::physics::Body& GetBody() const { return body; }
+const physics::Body& GetBody() const { return body; }
 
 private:
         void InitializeBody();
@@ -79,7 +79,7 @@ private:
 	Vec2 accumulatedForces = Vec2(0.0f, 0.0f);
 	float accumulatedTorque = 0.0f;
 
-my_engine::physics::Body body;
+physics::Body body;
 };
 
 #endif // RIGIDBODY_H
