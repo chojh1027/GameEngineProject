@@ -17,13 +17,12 @@ RigidBody::RigidBody(GameObject* owner,
     , initialPosition(initialPosition)
     , initialRotation(initialRotation)
 {
+    InitializeBodyState();
 }
 
 void RigidBody::Init()
 {
-    body.Set(size, mass, shape);
-    body.position = initialPosition;
-    body.rotation = initialRotation;
+    InitializeBodyState();
 }
 
 void RigidBody::Start()
@@ -46,9 +45,7 @@ void RigidBody::Destroy()
 void RigidBody::Reset()
 {
     UnregisterBody();
-    body.Set(size, mass, shape);
-    body.position = initialPosition;
-    body.rotation = initialRotation;
+    InitializeBodyState();
     RegisterBody();
     SyncTransform();
 }
@@ -60,6 +57,13 @@ void RigidBody::SetInitialTransform(const Vec2& position, float rotation)
     body.position = position;
     body.rotation = rotation;
     SyncTransform();
+}
+
+void RigidBody::InitializeBodyState()
+{
+    body.Set(size, mass, shape);
+    body.position = initialPosition;
+    body.rotation = initialRotation;
 }
 
 void RigidBody::RegisterBody()
