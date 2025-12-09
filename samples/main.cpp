@@ -9,13 +9,6 @@
 #include <stdio.h>
 #include <vector>
 
-#include "imgui/imgui.h"
-#include "imgui/backends/imgui_impl_glfw.h"
-#include "imgui/backends/imgui_impl_opengl2.h"
-
-#define GLFW_INCLUDE_NONE
-#include "glad/glad.h"
-#include "GLFW/glfw3.h"
 
 #include "RenderingSystem.h"
 #include "my_engine/Component.h"

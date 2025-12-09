@@ -16,7 +16,7 @@ public:
               const Vec2& initialPosition = Vec2(0.0f, 0.0f),
               float initialRotation = 0.0f);
 
-    ~RigidBody() override = default;
+    // ~RigidBody() override = default;
 
     void Init() override;
     void Start() override;

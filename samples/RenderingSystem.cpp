@@ -2,8 +2,6 @@
 
 #include <cstdio>
 
-#include "glad/glad.h"
-
 namespace
 {
 constexpr int kCircleSegments = 32;
