@@ -28,7 +28,7 @@ void InputSystem::Update()
     previousKeyStates = keyStates;
     previousMouseButtonStates = mouseButtonStates;
 
-    for (int key = 0; key <= GLFW_KEY_LAST; ++key)
+    for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; ++key)
         keyStates[key] = glfwGetKey(window, key);
 
     for (int button = 0; button <= GLFW_MOUSE_BUTTON_LAST; ++button)

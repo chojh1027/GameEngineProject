@@ -23,7 +23,7 @@ namespace
 {
 using physics::Body;
 
-constexpr int kLinkCount = 6;
+constexpr int kLinkCount = 4;
 constexpr float kGroundWidth = 100.0f;
 constexpr float kGroundHeight = 20.0f;
 constexpr float kGroundYOffset = -0.5f;
@@ -79,6 +79,60 @@ public:
 
 private:
         GameLoop* gameLoop = nullptr;
+};
+
+class PlayerController : public Component
+{
+public:
+    PlayerController(GameObject* owner, RigidBody& body)
+        : Component(owner)
+        , rigidBody(body)
+    {
+    }
+
+    void Update(float deltaTime) override
+    {
+        (void)deltaTime;    // Unreferenced parameter
+        if (gInputSystem == nullptr)
+            return;
+
+        // 마우스 왼쪽 버튼을 누르면 방향을 저장함, 누른 시간을 기록
+        // 마우스 왼쪽 버튼을 떼면 저장된 방향으로 누른 시간에 비례하는 힘을 가함
+        if (gInputSystem->IsMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+        {
+            double mouseX = 0.0;
+            double mouseY = 0.0;
+            glfwGetCursorPos(mainWindow, &mouseX, &mouseY);
+            // 화면 좌표를 월드 좌표로 변환
+            float worldX = static_cast<float>(mouseX) / (width / (2.0f * zoom)) - zoom;
+            float worldY = zoom - static_cast<float>(mouseY) / (height / (2.0f * zoom)) + pan_y;
+            Vec2 playerPos = gameObject->transform->GetPosition();
+            aimDirection = Vec2(worldX - playerPos.x, worldY - playerPos.y);
+            float length = aimDirection.Length();
+            if (length > 0.0f)
+                aimDirection = aimDirection / length; // 정규화
+            chargeTime += deltaTime;
+            if (chargeTime > maxChargeTime)
+                chargeTime = maxChargeTime;
+        }
+        else if (gInputSystem->WasMouseReleased(GLFW_MOUSE_BUTTON_LEFT))
+        {
+            float chargeRatio = chargeTime / maxChargeTime;
+            float forceMagnitude = chargeRatio * forceFactor * 1000.0f; // 힘의 크기 계산
+            Vec2 force = aimDirection * forceMagnitude;
+            rigidBody.AddForce(force);
+            // 초기화
+            aimDirection = Vec2(0.0f, 0.0f);
+            chargeTime = 0.0f;
+        }
+    }
+private:
+    RigidBody& rigidBody;
+
+    Vec2 aimDirection = Vec2(0.0f, 0.0f);
+    float chargeTime = 0.0f;
+    float maxChargeTime = 2.0f; // 최대 충전 시간
+    float forceFactor = 30.0f; // 힘의 계수
 };
 
 static void glfwErrorCallback(int error, const char* description)
@@ -156,27 +210,6 @@ int main(int, char**)
         gameLoop.SetRenderer(&frameRenderer);
         gameLoop.SetInputSystem(&inputSystem);
 
-        std::vector<std::unique_ptr<GameObject>> ownedObjects;
-        std::vector<std::unique_ptr<Component>> ownedComponents;
-        std::vector<std::unique_ptr<JointComponent>> ownedJointComponents;
-        std::vector<std::unique_ptr<Component>> ownedJointRenderers;
-        std::vector<RigidBody*> chainBodies;
-        std::vector<GameObject*> chainObjects;
-
-        auto controllerObject = std::make_unique<GameObject>();
-        auto stageController = std::make_unique<StageController>(controllerObject.get(), &gameLoop);
-        controllerObject->AddComponent(stageController.get());
-
-        if (!gameLoop.AddGameObject(controllerObject.get()))
-        {
-                fprintf(stderr, "Failed to register controller object with the game loop.\n");
-                glfwTerminate();
-                return -1;
-        }
-
-        ownedComponents.push_back(std::move(stageController));
-        ownedObjects.push_back(std::move(controllerObject));
-
         auto groundObject = std::make_unique<GameObject>();
         auto groundBody = std::make_unique<RigidBody>(groundObject.get(),
                                                       Vec2(kGroundWidth, kGroundHeight),
@@ -186,8 +219,6 @@ int main(int, char**)
         auto groundRenderer = std::make_unique<BodyRenderer>(groundObject.get(), *groundBody);
         groundObject->AddComponent(groundBody.get());
         groundObject->AddComponent(groundRenderer.get());
-        chainBodies.push_back(groundBody.get());
-        chainObjects.push_back(groundObject.get());
 
         if (!gameLoop.AddGameObject(groundObject.get()))
         {
@@ -196,53 +227,147 @@ int main(int, char**)
                 return -1;
         }
 
-        ownedComponents.push_back(std::move(groundBody));
-        ownedComponents.push_back(std::move(groundRenderer));
-        ownedObjects.push_back(std::move(groundObject));
+        // 플레이어 오브젝트
+		float playerStartX = 0.0f;
+		float playerStartY = 5.0f;
+		float playerMass = 50.0f;
+		auto playerShapeType = physics::Body::ShapeType::Circle;
 
-        for (int i = 0; i < kLinkCount; ++i)
+		auto playerObject = std::make_unique<GameObject>();
+        auto playerBody = std::make_unique<RigidBody>(
+            playerObject.get(),
+            Vec2(kCircleRadius * 2.0f, kCircleRadius * 2.0f),
+            playerMass,
+            playerShapeType,
+			Vec2(playerStartX, playerStartY));
+		auto playerRenderer = std::make_unique<BodyRenderer>(playerObject.get(), *playerBody);
+		auto playerController = std::make_unique<PlayerController>(playerObject.get(), *playerBody);
+
+		playerObject->AddComponent(playerBody.get());
+		playerObject->AddComponent(playerRenderer.get());
+		playerObject->AddComponent(playerController.get());
+		if (!gameLoop.AddGameObject(playerObject.get()))
+		{
+			fprintf(stderr, "Failed to register player object with the game loop.\n");
+			glfwTerminate();
+			return -1;
+		}
+
+        // 플레이어에 연결된 박스 1번
+		float box1StartX = playerStartX + 3.0f;
+		float box1StartY = playerStartY + 0.0f;
+		float box1Mass = 3.0f;
+		auto box1Object = std::make_unique<GameObject>();
+		auto box1Body = std::make_unique<RigidBody>(
+			box1Object.get(),
+			Vec2(kBoxSize, kBoxSize),
+			box1Mass,
+			physics::Body::ShapeType::Box,
+			Vec2(box1StartX, box1StartY));
+		auto box1Renderer = std::make_unique<BodyRenderer>(box1Object.get(), *box1Body);
+		box1Object->AddComponent(box1Body.get());
+		box1Object->AddComponent(box1Renderer.get());
+		if (!gameLoop.AddGameObject(box1Object.get()))
+		{
+			fprintf(stderr, "Failed to register box object with the game loop.\n");
+			glfwTerminate();
+			return -1;
+		}
+
+		// 플레이어와 박스 사이에 조인트 생성
+        auto jointObject1 = std::make_unique<GameObject>();
+        auto jointComponent1 = std::make_unique<JointComponent>(
+            jointObject1.get(),
+            playerBody.get(),
+            box1Body.get(),
+            Vec2(playerStartX , playerStartY));// Vec2((playerStartX + box1StartX) * 0.5, playerStartY));
+        jointObject1->AddComponent(jointComponent1.get());
+        if (!gameLoop.AddGameObject(jointObject1.get()))
         {
-                bool useCircle = (i % 2) == 0;
-                Vec2 size = useCircle ? Vec2(kCircleRadius, kCircleRadius) : Vec2(kBoxSize, kBoxSize);
-                physics::Body::ShapeType shape = useCircle ? physics::Body::ShapeType::Circle : physics::Body::ShapeType::Box;
-                Vec2 position(kStartX + kLinkSpacing * i, kStartY);
+            fprintf(stderr, "Failed to register joint object with the game loop.\n");
+            glfwTerminate();
+            return -1;
+        }
+        auto jointRenderer = std::make_unique<JointRenderer>(jointObject1.get(), *jointComponent1);
+        jointObject1->AddComponent(jointRenderer.get());
+		
+		// 박스 1번에 연결된 박스 2번
+		float box2StartX = box1StartX + 1.5f;
+		float box2StartY = box1StartY + 0.0f;
+		float box2Mass = 3.0f;
+		auto box2Object = std::make_unique<GameObject>();
+		auto box2Body = std::make_unique<RigidBody>(
+			box2Object.get(),
+			Vec2(kBoxSize, kBoxSize),
+			box2Mass,
+			physics::Body::ShapeType::Box,
+			Vec2(box2StartX, box2StartY));
+		auto box2Renderer = std::make_unique<BodyRenderer>(box2Object.get(), *box2Body);
+		box2Object->AddComponent(box2Body.get());
+		box2Object->AddComponent(box2Renderer.get());
+		if (!gameLoop.AddGameObject(box2Object.get()))
+		{
+			fprintf(stderr, "Failed to register box object with the game loop.\n");
+			glfwTerminate();
+			return -1;
+		}
+		// 박스 1번과 박스 2번 사이에 조인트 생성
+		auto jointObject2 = std::make_unique<GameObject>();
+		auto jointComponent2 = std::make_unique<JointComponent>(
+			jointObject2.get(),
+			box1Body.get(),
+			box2Body.get(),
+            Vec2(box1StartX, box1StartY)); // Vec2((box1StartX + box2StartX) * 0.5, playerStartY));
+		jointObject2->AddComponent(jointComponent2.get());
+        auto jointRenderer2 = std::make_unique<JointRenderer>(jointObject2.get(), *jointComponent2);
+        jointObject2->AddComponent(jointRenderer2.get());
+		if (!gameLoop.AddGameObject(jointObject2.get()))
+		{
+			fprintf(stderr, "Failed to register joint object with the game loop.\n");
+			glfwTerminate();
+			return -1;
+		}
 
-                auto linkObject = std::make_unique<GameObject>();
-                auto linkBody = std::make_unique<RigidBody>(linkObject.get(), size, kDynamicMass, shape, position);
-                auto linkRenderer = std::make_unique<BodyRenderer>(linkObject.get(), *linkBody);
-                linkObject->AddComponent(linkBody.get());
-                linkObject->AddComponent(linkRenderer.get());
-                chainBodies.push_back(linkBody.get());
-                chainObjects.push_back(linkObject.get());
-
-                if (!gameLoop.AddGameObject(linkObject.get()))
-                {
-                        fprintf(stderr, "Failed to register stage object with the game loop.\n");
-                        glfwTerminate();
-                        return -1;
-                }
-
-                ownedComponents.push_back(std::move(linkBody));
-                ownedComponents.push_back(std::move(linkRenderer));
-                ownedObjects.push_back(std::move(linkObject));
+        // 박스 2번에 연결된 박스 3번
+        float box3StartX = box2StartX + 1.5f;
+        float box3StartY = box2StartY + 0.0f;
+        float box3Mass = 3.0f;
+        auto box3Object = std::make_unique<GameObject>();
+        auto box3Body = std::make_unique<RigidBody>(
+            box3Object.get(),
+            Vec2(kBoxSize, kBoxSize),
+            box3Mass,
+            physics::Body::ShapeType::Box,
+            Vec2(box3StartX, box3StartY));
+        auto box3Renderer = std::make_unique<BodyRenderer>(box3Object.get(), *box3Body);
+        box3Object->AddComponent(box3Body.get());
+        box3Object->AddComponent(box3Renderer.get());
+        if (!gameLoop.AddGameObject(box3Object.get()))
+        {
+            fprintf(stderr, "Failed to register box object with the game loop.\n");
+            glfwTerminate();
+            return -1;
+        }
+        // 박스 1번과 박스 2번 사이에 조인트 생성
+        auto jointObject3 = std::make_unique<GameObject>();
+        auto jointComponent3 = std::make_unique<JointComponent>(
+            jointObject3.get(),
+            box2Body.get(),
+            box3Body.get(),
+            Vec2(box2StartX, box2StartY)); // Vec2((box1StartX + box2StartX) * 0.5, playerStartY));
+        jointObject3->AddComponent(jointComponent3.get());
+        auto jointRenderer3 = std::make_unique<JointRenderer>(jointObject3.get(), *jointComponent3);
+        jointObject3->AddComponent(jointRenderer3.get());
+        if (!gameLoop.AddGameObject(jointObject3.get()))
+        {
+            fprintf(stderr, "Failed to register joint object with the game loop.\n");
+            glfwTerminate();
+            return -1;
         }
 
-        for (size_t i = 1; i < chainBodies.size(); ++i)
-        {
-                physics::Body* bodyA = chainBodies[i - 1]->GetBody();
-                physics::Body* bodyB = chainBodies[i]->GetBody();
-                Vec2 anchor = (bodyA->position + bodyB->position) * 0.5f;
 
-                GameObject* owningObject = chainObjects[i];
-                auto jointComponent = std::make_unique<JointComponent>(owningObject, chainBodies[i - 1], chainBodies[i], anchor);
-                auto jointRenderer = std::make_unique<JointRenderer>(owningObject, *jointComponent);
 
-                owningObject->AddComponent(jointComponent.get());
-                owningObject->AddComponent(jointRenderer.get());
 
-                ownedJointComponents.push_back(std::move(jointComponent));
-                ownedJointRenderers.push_back(std::move(jointRenderer));
-        }
 
         gameLoop.Run();
 

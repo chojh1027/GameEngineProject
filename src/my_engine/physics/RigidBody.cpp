@@ -92,3 +92,13 @@ void RigidBody::SyncTransform()
     gameObject->transform->SetPosition(body.position);
     gameObject->transform->SetRotation(body.rotation);
 }
+
+void RigidBody::SetVelocity(const Vec2& velocity)
+{
+    body.velocity = velocity;
+}   
+
+void RigidBody::AddForce(const Vec2& force) 
+{
+	body.AddForce(force);
+}
