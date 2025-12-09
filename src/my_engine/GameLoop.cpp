@@ -6,6 +6,7 @@
 
 #include "my_engine/physics/PhysicsManager.h"
 #include "my_engine/InputSystem.h"
+#include "my_engine/CameraSystem.h"
 #include "../../samples/RenderingSystem.h"
 #include "my_engine/physics/RigidBody.h"
 
@@ -29,6 +30,12 @@ void GameLoop::SetInputSystem(InputSystem* system)
 {
         inputSystem = system;
         gInputSystem = system;
+}
+
+void GameLoop::SetCameraSystem(CameraSystem* system)
+{
+        cameraSystem = system;
+        gCameraSystem = system;
 }
 
 bool GameLoop::AddGameObject(GameObject* object)
@@ -100,6 +107,12 @@ void GameLoop::Run()
 
                 if (inputSystem != nullptr)
                         inputSystem->Update();
+
+                if (cameraSystem != nullptr)
+                {
+                        cameraSystem->Update(delta.count());
+                        cameraSystem->ApplyView();
+                }
 
                 accumulator += delta.count();
                 while (accumulator >= fixedDeltaTime)

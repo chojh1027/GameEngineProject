@@ -171,6 +171,7 @@
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="external\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="external\imgui\backends\imgui_impl_opengl2.cpp" />
+    <ClCompile Include="src\my_engine\CameraSystem.cpp" />
     <ClCompile Include="src\my_engine\GameLoop.cpp" />
     <ClCompile Include="src\my_engine\InputSystem.cpp" />
     <ClCompile Include="src\my_engine\GameObject.cpp" />
@@ -229,6 +230,7 @@
     <ClInclude Include="include\box2d-lite\World.h" />
     <ClInclude Include="external\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="external\imgui\backends\imgui_impl_opengl2.h" />
+    <ClInclude Include="include\my_engine\CameraSystem.h" />
     <ClInclude Include="include\my_engine\GameLoop.h" />
     <ClInclude Include="include\my_engine\InputSystem.h" />
     <ClInclude Include="include\my_engine\GameObject.h" />

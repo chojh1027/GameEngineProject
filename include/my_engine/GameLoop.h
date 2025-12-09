@@ -11,6 +11,7 @@ class PhysicsManager;
 class FrameRenderer;
 class RigidBody;
 class InputSystem;
+class CameraSystem;
 
 class GameLoop {
 public:
@@ -21,6 +22,7 @@ public:
         void SetPhysicsManager(PhysicsManager* manager);
         void SetRenderer(FrameRenderer* renderer);
         void SetInputSystem(InputSystem* system);
+        void SetCameraSystem(CameraSystem* system);
         void Run();
         void Stop();
 
@@ -38,6 +40,7 @@ void ShutdownObjects();
         PhysicsManager* physicsManager = nullptr;
         FrameRenderer* frameRenderer = nullptr;
         InputSystem* inputSystem = nullptr;
+        CameraSystem* cameraSystem = nullptr;
         bool isRunning = false;
         float fixedDeltaTime = 1.0f / 60.0f;
 };
