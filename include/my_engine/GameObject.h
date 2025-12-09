@@ -16,7 +16,7 @@ class Component;
 
 class GameObject {
 public:
-	Transform* transform = nullptr;
+	Transform* transform;
 
 	GameObject() {
 		transform = new Transform(this);

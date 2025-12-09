@@ -1,6 +1,5 @@
 #pragma once
 
-#include <experimental/filesystem>
 #include <string>
 #include <vector>
 
@@ -20,7 +19,7 @@ public:
 
 private:
     bool LoadTexture();
-    bool LoadTextureFromBmp(const std::experimental::filesystem::path& texturePath);
+    bool LoadTextureFromBmp(const std::string& texturePath);
     void CreateFallbackTexture();
 
     const RigidBody& rigidBody;

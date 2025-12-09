@@ -19,6 +19,7 @@
 #include "my_engine/physics/PhysicsManager.h"
 #include "my_engine/physics/RigidBody.h"
 #include "my_engine/physics/JointComponent.h"
+#include "TextureRenderer.h"
 
 namespace
 {
@@ -39,6 +40,44 @@ GLFWwindow* mainWindow = NULL;
 
 int width = 1280;
 int height = 720;
+
+
+const char* playerTextureFile = "metal_ball.bmp";
+const char* backgroundTextureFile = "background.bmp";
+const char* invironmentRockTextureFile = "rock_texture.bmp";
+const char* groundTextureFile = "ground_texture.bmp";
+
+
+const char* boxTextureFile = "box_texture.png";
+const char* linkTextureFile = "chain_link.png";
+const char* invironmentTreeTextureFile = "tree_texture.png";
+
+// 배경 위치, 크기
+Vec2 backgroundPosition = Vec2(0.0f, kGroundHeight / 2.0f);
+Vec2 backgroundSize = Vec2(100.0f, kGroundHeight + 40.0f);
+
+// 바닥 위치, 크기
+Vec2 groundPosition = Vec2(0.0f, -kStartY);
+Vec2 groundSize = Vec2(kGroundWidth, kGroundHeight);
+
+// 벽 위치, 크기
+Vec2 leftWallPosition = Vec2(-kGroundWidth / 2.0f - 1.0f, kGroundHeight / 2.0f);
+Vec2 rightWallPosition = Vec2(kGroundWidth / 2.0f + 1.0f, kGroundHeight / 2.0f);
+Vec2 wallSize = Vec2(10.0f, kGroundHeight + 20.0f);
+
+
+// 1: 바위
+Vec2 rockPosition = Vec2(5.0f, kGroundYOffset + kGroundHeight / 2.0f + 1.0f);
+Vec2 rockSize = Vec2(5.0f, 2.0f);
+
+// 2: 계단
+Vec2 step1Position = Vec2(-10.0f, 0.5f);
+Vec2 step2Position = Vec2(-8.0f, 1.5f);
+Vec2 step3Position = Vec2(-6.0f, 2.5f);
+Vec2 step1Size = Vec2(2.0f, 1.0f);
+Vec2 step2Size = Vec2(2.0f, 2.0f);
+Vec2 step3Size = Vec2(2.0f, 3.0f);
+
 } // namespace
 
 class StageController : public Component
@@ -165,6 +204,87 @@ static void Reshape(GLFWwindow*, int w, int h)
         }
 }
 
+GameObject* createPlayer(GameLoop& gameLoop, float startX, float startY, float mass, physics::Body::ShapeType shapeType)
+{
+    auto playerObject = std::make_unique<GameObject>();
+    auto playerBody = std::make_unique<RigidBody>(
+        playerObject.get(),
+        Vec2(kCircleRadius * 2.0f, kCircleRadius * 2.0f),
+        mass,
+        shapeType,
+        Vec2(startX, startY));
+    auto playerController = std::make_unique<PlayerController>(playerObject.get(), *playerBody);
+    auto playerRenderer = std::make_unique<TextureRenderer>(playerObject.get(), *playerBody, playerTextureFile);
+    playerObject->AddComponent(playerBody.get());
+    playerObject->AddComponent(playerRenderer.get());
+    playerObject->AddComponent(playerController.get());
+    if (!gameLoop.AddGameObject(playerObject.get()))
+    {
+        fprintf(stderr, "Failed to register player object with the game loop.\n");
+        return nullptr;
+    }
+    return playerObject.release();
+}
+
+GameObject* createBox(GameLoop& gameLoop, float startX, float startY, float mass)
+{
+    auto boxObject = std::make_unique<GameObject>();
+    auto boxBody = std::make_unique<RigidBody>(
+        boxObject.get(),
+        Vec2(kBoxSize, kBoxSize),
+        mass,
+        physics::Body::ShapeType::Box,
+        Vec2(startX, startY));
+    auto boxRenderer = std::make_unique<BodyRenderer>(boxObject.get(), *boxBody);
+    boxObject->AddComponent(boxBody.get());
+    boxObject->AddComponent(boxRenderer.get());
+    if (!gameLoop.AddGameObject(boxObject.get()))
+    {
+        fprintf(stderr, "Failed to register box object with the game loop.\n");
+        return nullptr;
+    }
+    return boxObject.release();
+}
+
+//GameObject* createJoint(GameLoop& gameLoop, RigidBody* bodyA, RigidBody* bodyB, Vec2 anchorA, Vec2 anchorB)
+//{
+//    auto jointObject = std::make_unique<GameObject>();
+//    auto jointComponent = std::make_unique<JointComponent>(
+//        jointObject.get(),
+//        bodyA,
+//        bodyB,
+//        anchorA,
+//        anchorB);
+//    jointObject->AddComponent(jointComponent.get());
+//    if (!gameLoop.AddGameObject(jointObject.get()))
+//    {
+//        fprintf(stderr, "Failed to register joint object with the game loop.\n");
+//        return nullptr;
+//    }
+//    return jointObject.release();
+//}
+
+GameObject* createInvironmentBox(GameLoop& gameLoop, float posX, float posY, float sizeX, float sizeY)
+{
+    auto boxObject = std::make_unique<GameObject>();
+    auto boxBody = std::make_unique<RigidBody>(
+        boxObject.get(),
+        Vec2(sizeX, sizeY),
+        FLT_MAX,
+        physics::Body::ShapeType::Box,
+        Vec2(posX, posY));
+    auto boxRenderer = std::make_unique<BodyRenderer>(boxObject.get(), *boxBody);
+    boxObject->AddComponent(boxBody.get());
+    boxObject->AddComponent(boxRenderer.get());
+    if (!gameLoop.AddGameObject(boxObject.get()))
+    {
+        fprintf(stderr, "Failed to register environment box object with the game loop.\n");
+        return nullptr;
+    }
+    return boxObject.release();
+}
+
+
 int main(int, char**)
 {
         glfwSetErrorCallback(glfwErrorCallback);
@@ -231,13 +351,43 @@ int main(int, char**)
         gameLoop.SetInputSystem(&inputSystem);
         gameLoop.SetCameraSystem(&cameraSystem);
 
+#pragma region Background
+
+		// 배경 오브젝트
+		auto backgroundObject = std::make_unique<GameObject>();
+        auto backgroundBody = std::make_unique<RigidBody>(backgroundObject.get(),
+            backgroundSize,
+            FLT_MAX,
+            physics::Body::ShapeType::Box,
+			backgroundPosition);
+        auto backgroundRenderer = std::make_unique<TextureRenderer>(backgroundObject.get(), *backgroundBody, backgroundTextureFile);
+
+		backgroundBody->SetActive(false); // 렌더링을 위해 추가한 바디는 물리 연산에서 제외
+
+		// 바디 180도 회전
+		backgroundBody->GetBody()->rotation = 3.14159f; // 라디안 단위
+
+        backgroundObject->AddComponent(backgroundBody.get());
+        backgroundObject->AddComponent(backgroundRenderer.get());
+        if (!gameLoop.AddGameObject(backgroundObject.get()))
+        {
+                fprintf(stderr, "Failed to register background object with the game loop.\n");
+                glfwTerminate();
+                return -1;
+		}
+
+#pragma endregion
+
+#pragma region Ground
+
         auto groundObject = std::make_unique<GameObject>();
-        auto groundBody = std::make_unique<RigidBody>(groundObject.get(),
-                                                      Vec2(kGroundWidth, kGroundHeight),
-                                                      FLT_MAX,
-                                                      physics::Body::ShapeType::Box,
-                                                      Vec2(0.0f, kGroundYOffset * kGroundHeight));
-        auto groundRenderer = std::make_unique<BodyRenderer>(groundObject.get(), *groundBody);
+        auto groundBody = std::make_unique<RigidBody>(
+            groundObject.get(),
+            groundSize,
+            FLT_MAX,
+			physics::Body::ShapeType::Box,
+			groundPosition);
+        auto groundRenderer = std::make_unique<TextureRenderer>(groundObject.get(), *groundBody, groundTextureFile);
         groundObject->AddComponent(groundBody.get());
         groundObject->AddComponent(groundRenderer.get());
 
@@ -247,6 +397,108 @@ int main(int, char**)
                 glfwTerminate();
                 return -1;
         }
+
+#pragma endregion
+
+#pragma region wall
+
+
+        // 왼쪽 벽 오브젝트
+        auto leftWallObject = std::make_unique<GameObject>();
+        auto leftWallBody = std::make_unique<RigidBody>(
+            leftWallObject.get(),
+            wallSize,
+            FLT_MAX,
+            physics::Body::ShapeType::Box,
+            leftWallPosition);
+		auto leftWallRenderer = std::make_unique<TextureRenderer>(leftWallObject.get(), *leftWallBody, invironmentRockTextureFile);
+        leftWallObject->AddComponent(leftWallBody.get());
+        leftWallObject->AddComponent(leftWallRenderer.get());
+        if (!gameLoop.AddGameObject(leftWallObject.get()))
+        {
+                fprintf(stderr, "Failed to register left wall object with the game loop.\n");
+                glfwTerminate();
+                return -1;
+        }
+        // 오른쪽 벽 오브젝트
+        auto rightWallObject = std::make_unique<GameObject>();
+        auto rightWallBody = std::make_unique<RigidBody>(
+            rightWallObject.get(),
+            wallSize,
+            FLT_MAX,
+            physics::Body::ShapeType::Box,
+            rightWallPosition);
+		auto rightWallRenderer = std::make_unique<TextureRenderer>(rightWallObject.get(), *rightWallBody, invironmentRockTextureFile);
+        rightWallObject->AddComponent(rightWallBody.get());
+        rightWallObject->AddComponent(rightWallRenderer.get());
+        if (!gameLoop.AddGameObject(rightWallObject.get()))
+        {
+                fprintf(stderr, "Failed to register right wall object with the game loop.\n");
+                glfwTerminate();
+                return -1;
+		}
+
+#pragma endregion
+
+#pragma region Invironments
+
+        //왼쪽 바위 위치
+		auto rockObject = std::make_unique<GameObject>();
+        auto rockBody = std::make_unique<RigidBody>(
+            rockObject.get(),
+            rockSize,
+            FLT_MAX,
+            physics::Body::ShapeType::Box,
+			Vec2(-5.0f, 5.0f));
+        auto rockRenderer = std::make_unique<TextureRenderer>(rockObject.get(), *rockBody, invironmentRockTextureFile);
+        rockObject->AddComponent(rockBody.get());
+        rockObject->AddComponent(rockRenderer.get());
+        if (!gameLoop.AddGameObject(rockObject.get()))
+        {
+                fprintf(stderr, "Failed to register rock object with the game loop.\n");
+                glfwTerminate();
+                return -1;
+        }
+
+        //오른쪽 바위 위치: 
+        auto rockObject2 = std::make_unique<GameObject>();
+        auto rockBody2 = std::make_unique<RigidBody>(
+            rockObject2.get(),
+            rockSize,
+            FLT_MAX,
+            physics::Body::ShapeType::Box,
+			Vec2(1.0f, 8.0f));
+        auto rockRenderer2 = std::make_unique<TextureRenderer>(rockObject2.get(), *rockBody2, invironmentRockTextureFile);
+        rockObject2->AddComponent(rockBody2.get());
+        rockObject2->AddComponent(rockRenderer2.get());
+        if (!gameLoop.AddGameObject(rockObject2.get()))
+        {
+                fprintf(stderr, "Failed to register rock object with the game loop.\n");
+                glfwTerminate();
+                return -1;
+        }
+
+        //왼쪽 바위 위치: -27, 11
+		auto rockObject3 = std::make_unique<GameObject>();
+        auto rockBody3 = std::make_unique<RigidBody>(
+            rockObject3.get(),
+            rockSize,
+            FLT_MAX,
+            physics::Body::ShapeType::Box,
+            Vec2(6.0f, 11.0f));
+        auto rockRenderer3 = std::make_unique<TextureRenderer>(rockObject3.get(), *rockBody3, invironmentRockTextureFile);
+        rockObject3->AddComponent(rockBody3.get());
+        rockObject3->AddComponent(rockRenderer3.get());
+        if (!gameLoop.AddGameObject(rockObject3.get()))
+        {
+                fprintf(stderr, "Failed to register rock object with the game loop.\n");
+                glfwTerminate();
+                return -1;
+		}
+        
+
+#pragma endregion
+
 
 #pragma region GameObjects
 
@@ -264,12 +516,20 @@ int main(int, char**)
             playerMass,
             playerShapeType,
 			Vec2(playerStartX, playerStartY));
-		auto playerRenderer = std::make_unique<BodyRenderer>(playerObject.get(), *playerBody);
+
+		//playerBody->SetFriction(0.5f);
+		//float oldI = playerBody->GetBody()->I;
+		//playerBody->SetInertia(oldI * 100.0f); // 관성 모멘트 증가로 회전 저항 증가
+
 		auto playerController = std::make_unique<PlayerController>(playerObject.get(), *playerBody);
+        auto playerRenderer = std::make_unique<TextureRenderer>(playerObject.get(), *playerBody, playerTextureFile);
 
 		playerObject->AddComponent(playerBody.get());
 		playerObject->AddComponent(playerRenderer.get());
 		playerObject->AddComponent(playerController.get());
+        
+
+
 		if (!gameLoop.AddGameObject(playerObject.get()))
 		{
 			fprintf(stderr, "Failed to register player object with the game loop.\n");

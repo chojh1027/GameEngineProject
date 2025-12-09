@@ -7,7 +7,7 @@ class Transform;
 
 class Component {
 public:
-	GameObject* gameObject = nullptr;
+	GameObject* gameObject;
 
 	Component(GameObject* gameObject);
 	~Component();

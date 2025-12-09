@@ -1,7 +1,6 @@
 #include "TextureRenderer.h"
 
 #include <cstdio>
-#include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
 #include <utility>
@@ -14,7 +13,7 @@
 
 namespace
 {
-    namespace fs = std::experimental::filesystem;
+    // namespace fs = std::experimental::filesystem;
 
     struct BmpImage
     {
@@ -36,11 +35,14 @@ namespace
         return true;
     }
 
-    bool LoadBmpFile(const fs::path& path, BmpImage& outImage)
+    bool LoadBmpFile(const std::string& path, BmpImage& outImage)
     {
         std::ifstream file(path, std::ios::binary);
         if (!file)
+        {
+            std::cerr << "ifstream can not load file";
             return false;
+        }
 
         unsigned char signature[2];
         if (!file.read(reinterpret_cast<char*>(signature), 2))
@@ -79,11 +81,20 @@ namespace
             !ReadLittleEndian(file, imageSize))
             return false;
 
+        std::cout << "[LoadBmpFile] "
+            << "w=" << width
+            << " h=" << height
+            << " planes=" << planes
+            << " bpp=" << bitsPerPixel
+            << " compression=" << compression
+            << " imageSize=" << imageSize
+            << std::endl;
+
         if (planes != 1)
             return false;
         if (!(bitsPerPixel == 24 || bitsPerPixel == 32))
             return false; // only support 24-bit BGR or 32-bit BGRA
-        if (compression != 0)
+        if (compression != 0 && compression != 3)
             return false; // only support BI_RGB (no compression)
 
         // Skip the rest of the DIB header if present
@@ -150,19 +161,12 @@ void TextureRenderer::Init()
 
 bool TextureRenderer::LoadTexture()
 {
-    namespace fs = std::experimental::filesystem;
+    std::string texturePath = "src/" + textureFile;  // 단순 문자열 연결
 
-    fs::path texturePath(textureFile);
-    if (!texturePath.has_parent_path())
-        texturePath = fs::path("src") / texturePath;
-
-    if (LoadTextureFromBmp(texturePath))
-        return true;
-
-    return false;
+    return LoadTextureFromBmp(texturePath);
 }
 
-bool TextureRenderer::LoadTextureFromBmp(const std::experimental::filesystem::path& texturePath)
+bool TextureRenderer::LoadTextureFromBmp(const std::string& texturePath)
 {
     BmpImage image;
     if (!LoadBmpFile(texturePath, image))
@@ -230,12 +234,13 @@ void TextureRenderer::Update(float deltaTime)
     (void)deltaTime;
 
     const physics::Body* body = rigidBody.GetBody();
-    if (body == nullptr || textureId == 0)
+    if (body == nullptr|| textureId == 0)
         return;
 
-    Mat22 rotation(body->rotation);
-    Vec2 center = body->position;
-    Vec2 halfSize = 0.5f * body->width;
+
+    Mat22 rotation = Mat22(body->rotation);
+    Vec2  center = body->position;
+    Vec2  halfSize = 0.5f * body->width;
 
     Vec2 v1 = center + rotation * Vec2(-halfSize.x, -halfSize.y);
     Vec2 v2 = center + rotation * Vec2(halfSize.x, -halfSize.y);
@@ -245,8 +250,13 @@ void TextureRenderer::Update(float deltaTime)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, textureId);
+
+    glColor4f(1.f, 1.f, 1.f, 1.f);
 
     glBegin(GL_QUADS);
     glTexCoord2f(0.0f, 0.0f);

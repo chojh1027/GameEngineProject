@@ -166,12 +166,12 @@ bool FrameRenderer::BeginFrame()
 
 void FrameRenderer::RenderOverlay(float deltaTime) const
 {
-    char buffer[64];
+    /*char buffer[64];
     snprintf(buffer, sizeof(buffer), "Delta Time: %.3f", deltaTime);
 
     DrawText(5, 5, "Joint Chain Stage");
     DrawText(5, 35, "Keys: R Reset, A Accumulation, P Position Correction, W Warm Starting");
-    DrawText(5, 65, buffer);
+    DrawText(5, 65, buffer);*/
 }
 
 void FrameRenderer::FinishFrame() const

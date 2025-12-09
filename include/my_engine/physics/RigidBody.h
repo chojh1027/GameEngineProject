@@ -33,6 +33,16 @@ public:
 	void SetVelocity(const Vec2& velocity);
 	void AddForce(const Vec2& force);
 
+    void SetInertia(float inertia)
+    {
+		body.I = inertia;
+	}
+
+    void SetFriction(float friction)
+    {
+        body.friction = friction;
+    }
+
 private:
     void InitializeBodyState();
     void RegisterBody();

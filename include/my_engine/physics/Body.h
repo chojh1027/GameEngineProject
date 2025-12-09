@@ -16,41 +16,47 @@
 
 namespace physics
 {
+	
+	struct Body
+	{
+		enum class ShapeType
+		{
+			Box,
+			Circle
+		};
+		
+		Body();
+		void Set(const Vec2& w, float m, ShapeType shapeType = ShapeType::Box);
+		
+		void AddForce(const Vec2& f)
+		{
+			force += f;
+		}
 
-struct Body
-{
-enum class ShapeType
-{
-Box,
-Circle
-};
-
-Body();
-void Set(const Vec2& w, float m, ShapeType shapeType = ShapeType::Box);
-
-void AddForce(const Vec2& f)
-{
-force += f;
-}
-
-Vec2 position;
-float rotation;
-
-Vec2 velocity;
-float angularVelocity;
-
-Vec2 force;
-float torque;
-
-Vec2 width;
-float radius;
-ShapeType shape;
-
-float friction;
-float mass, invMass;
-float I, invI;
-};
-
+		void SetInertia(const float& inertia)
+		{
+			I = inertia;
+			invI = (I < FLT_MAX) ? 1.0f / I : 0.0f;
+		}
+		
+		Vec2 position;
+		float rotation;
+		
+		Vec2 velocity;
+		float angularVelocity;
+		
+		Vec2 force;
+		float torque;
+		
+		Vec2 width;
+		float radius;
+		ShapeType shape;
+		
+		float friction;
+		float mass, invMass;
+		float I, invI;
+	};
+	
 } // namespace my_engine::physics
 
 #endif
