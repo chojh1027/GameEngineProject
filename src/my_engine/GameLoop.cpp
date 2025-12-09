@@ -1,14 +1,33 @@
 #include "my_engine/GameLoop.h"
 
-#include "my_engine/physics/PhysicsManager.h"
-
 #include <algorithm>
 #include <chrono>
 #include <iterator>
 
+#include "my_engine/physics/PhysicsManager.h"
+#include "../../samples/RenderingSystem.h"
+#include "my_engine/physics/RigidBody.h"
+
 GameLoop::GameLoop()
 {
         std::fill(std::begin(gameObjects), std::end(gameObjects), nullptr);
+}
+
+void GameLoop::SetPhysicsManager(PhysicsManager* manager)
+{
+        physicsManager = manager;
+        gPhysicsManager = manager;
+}
+
+void GameLoop::SetRenderer(FrameRenderer* renderer)
+{
+        frameRenderer = renderer;
+}
+
+void GameLoop::SetResetTargets(std::vector<RigidBody*>* bodies, bool* resetFlag)
+{
+        resetBodies = bodies;
+        resetRequested = resetFlag;
 }
 
 bool GameLoop::AddGameObject(GameObject* object)
@@ -53,29 +72,68 @@ void GameLoop::Run()
 
         isRunning = true;
 
-InitializeObjects();
+        InitializeObjects();
 
-auto previous = std::chrono::steady_clock::now();
-float accumulator = 0.0f;
+        if (frameRenderer != nullptr && !frameRenderer->Initialize())
+        {
+                isRunning = false;
+                ShutdownObjects();
+                ClearObjects();
+                return;
+        }
 
-while (isRunning)
-{
-auto current = std::chrono::steady_clock::now();
-std::chrono::duration<float> delta = current - previous;
-previous = current;
+        auto previous = std::chrono::steady_clock::now();
+        float accumulator = 0.0f;
 
-accumulator += delta.count();
-while (accumulator >= fixedDeltaTime)
-{
-FixedUpdateObjects(fixedDeltaTime);
-accumulator -= fixedDeltaTime;
-}
+        while (isRunning)
+        {
+                auto current = std::chrono::steady_clock::now();
+                std::chrono::duration<float> delta = current - previous;
+                previous = current;
 
-UpdateObjects(delta.count());
+                if (frameRenderer != nullptr && !frameRenderer->BeginFrame())
+                {
+                        Stop();
+                        break;
+                }
+
+                if (resetRequested != nullptr && resetBodies != nullptr && *resetRequested)
+                {
+                        for (RigidBody* body : *resetBodies)
+                        {
+                                if (body == nullptr)
+                                        continue;
+
+                                body->Reset();
+                        }
+
+                        if (physicsManager != nullptr)
+                                physicsManager->RebuildWorld();
+
+                        *resetRequested = false;
+                }
+
+                accumulator += delta.count();
+                while (accumulator >= fixedDeltaTime)
+                {
+                        FixedUpdateObjects(fixedDeltaTime);
+                        accumulator -= fixedDeltaTime;
+                }
+
+                UpdateObjects(delta.count());
+
+                if (frameRenderer != nullptr)
+                {
+                        frameRenderer->RenderOverlay(delta.count());
+                        frameRenderer->FinishFrame();
+                }
 
                 if (gameObjectCount == 0)
                         isRunning = false;
         }
+
+        if (frameRenderer != nullptr)
+                frameRenderer->Shutdown();
 
         ShutdownObjects();
         ClearObjects();

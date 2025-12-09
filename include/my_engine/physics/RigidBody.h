@@ -4,21 +4,19 @@
 
 #include "my_engine/Component.h"
 #include "my_engine/physics/Body.h"
-
-class PhysicsManager;
+#include "my_engine/physics/PhysicsManager.h"
 
 class RigidBody : public Component
 {
 public:
     RigidBody(GameObject* owner,
-              PhysicsManager& manager,
               const Vec2& size,
               float mass,
               physics::Body::ShapeType shape = physics::Body::ShapeType::Box,
               const Vec2& initialPosition = Vec2(0.0f, 0.0f),
               float initialRotation = 0.0f);
 
-    ~RigidBody() override = default;
+    // ~RigidBody() override = default;
 
     void Init() override;
     void Start() override;
@@ -33,11 +31,11 @@ public:
     void SetInitialTransform(const Vec2& position, float rotation);
 
 private:
+    void InitializeBodyState();
     void RegisterBody();
     void UnregisterBody();
     void SyncTransform();
 
-    PhysicsManager& physicsManager;
     physics::Body body;
     Vec2 size;
     float mass;

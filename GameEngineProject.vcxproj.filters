@@ -87,6 +87,9 @@
     <ClCompile Include="external\imgui\imgui_widgets.cpp">
       <Filter>소스 파일\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="samples\RenderingSystem.cpp">
+      <Filter>소스 파일\samples</Filter>
+    </ClCompile>
     <ClCompile Include="samples\main.cpp">
       <Filter>소스 파일\samples</Filter>
     </ClCompile>
@@ -165,6 +168,9 @@
     <ClCompile Include="src\my_engine\physics\Joint.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
+    <ClCompile Include="src\my_engine\physics\JointComponent.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
     <ClCompile Include="src\my_engine\physics\PhysicsManager.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
@@ -172,9 +178,6 @@
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
     <ClCompile Include="src\my_engine\physics\World.cpp">
-      <Filter>소스 파일\my_physics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\my_engine\Rigidbody.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
     <ClCompile Include="src\my_engine\Component.cpp">
@@ -203,6 +206,9 @@
     <ClInclude Include="include\my_engine\physics\Body.h">
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
+    <ClInclude Include="include\my_engine\physics\JointComponent.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
     <ClInclude Include="include\my_engine\physics\PhysicsManager.h">
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
@@ -219,6 +225,9 @@
       <Filter>헤더 파일\samples</Filter>
     </ClInclude>
     <ClInclude Include="external\imgui\backends\imgui_impl_opengl2.h">
+      <Filter>헤더 파일\samples</Filter>
+    </ClInclude>
+    <ClInclude Include="samples\RenderingSystem.h">
       <Filter>헤더 파일\samples</Filter>
     </ClInclude>
     <ClInclude Include="external\glad\include\glad\glad.h">
@@ -285,9 +294,6 @@
       <Filter>헤더 파일\glfw</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\GameObject.h">
-      <Filter>헤더 파일\my_physics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\my_engine\Rigidbody.h">
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\Transform.h">

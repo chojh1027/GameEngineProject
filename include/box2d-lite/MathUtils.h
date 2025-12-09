@@ -43,6 +43,17 @@ struct Vec2
 		x *= a; y *= a;
 	}
 
+	Vec2 operator / (float a) const
+	{
+		float inv = 1.0f / a;
+		return Vec2(x * inv, y * inv);
+	}
+
+	Vec2 operator * (float a) const
+	{
+		return Vec2(x * a, y * a);
+	}
+
 	float Length() const
 	{
 		return sqrtf(x * x + y * y);

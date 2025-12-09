@@ -5,27 +5,24 @@
 #include "my_engine/physics/PhysicsManager.h"
 
 RigidBody::RigidBody(GameObject* owner,
-                     PhysicsManager& manager,
                      const Vec2& size,
                      float mass,
                      physics::Body::ShapeType shape,
                      const Vec2& initialPosition,
                      float initialRotation)
     : Component(owner)
-    , physicsManager(manager)
     , size(size)
     , mass(mass)
     , shape(shape)
     , initialPosition(initialPosition)
     , initialRotation(initialRotation)
 {
+    InitializeBodyState();
 }
 
 void RigidBody::Init()
 {
-    body.Set(size, mass, shape);
-    body.position = initialPosition;
-    body.rotation = initialRotation;
+    InitializeBodyState();
 }
 
 void RigidBody::Start()
@@ -48,9 +45,7 @@ void RigidBody::Destroy()
 void RigidBody::Reset()
 {
     UnregisterBody();
-    body.Set(size, mass, shape);
-    body.position = initialPosition;
-    body.rotation = initialRotation;
+    InitializeBodyState();
     RegisterBody();
     SyncTransform();
 }
@@ -64,21 +59,28 @@ void RigidBody::SetInitialTransform(const Vec2& position, float rotation)
     SyncTransform();
 }
 
+void RigidBody::InitializeBodyState()
+{
+    body.Set(size, mass, shape);
+    body.position = initialPosition;
+    body.rotation = initialRotation;
+}
+
 void RigidBody::RegisterBody()
 {
-    if (isRegistered)
+    if (isRegistered || gPhysicsManager == nullptr)
         return;
 
-    physicsManager.RegisterBody(&body);
+    gPhysicsManager->RegisterBody(&body);
     isRegistered = true;
 }
 
 void RigidBody::UnregisterBody()
 {
-    if (!isRegistered)
+    if (!isRegistered || gPhysicsManager == nullptr)
         return;
 
-    physicsManager.UnregisterBody(&body);
+    gPhysicsManager->UnregisterBody(&body);
     isRegistered = false;
 }
 
