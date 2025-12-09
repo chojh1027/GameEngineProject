@@ -15,6 +15,7 @@
 #include "my_engine/GameLoop.h"
 #include "my_engine/GameObject.h"
 #include "my_engine/InputSystem.h"
+#include "my_engine/CameraSystem.h"
 #include "my_engine/physics/PhysicsManager.h"
 #include "my_engine/physics/RigidBody.h"
 #include "my_engine/physics/JointComponent.h"
@@ -36,8 +37,6 @@ constexpr float kDynamicMass = 5.0f;
 
 GLFWwindow* mainWindow = NULL;
 
-float zoom = 10.0f;
-float pan_y = 8.0f;
 int width = 1280;
 int height = 720;
 } // namespace
@@ -103,11 +102,14 @@ public:
             double mouseX = 0.0;
             double mouseY = 0.0;
             glfwGetCursorPos(mainWindow, &mouseX, &mouseY);
-            // 화면 좌표를 월드 좌표로 변환
-            float worldX = static_cast<float>(mouseX) / (width / (2.0f * zoom)) - zoom;
-            float worldY = zoom - static_cast<float>(mouseY) / (height / (2.0f * zoom)) + pan_y;
+            Vec2 worldPos;
+            if (gCameraSystem != nullptr)
+                    worldPos = gCameraSystem->ScreenToWorld(mouseX, mouseY, width, height);
+            else
+                    worldPos = Vec2(0.0f, 0.0f);
+
             Vec2 playerPos = gameObject->transform->GetPosition();
-            aimDirection = Vec2(worldX - playerPos.x, worldY - playerPos.y);
+            aimDirection = Vec2(worldPos.x - playerPos.x, worldPos.y - playerPos.y);
             float length = aimDirection.Length();
             if (length > 0.0f)
                 aimDirection = aimDirection / length; // 정규화
@@ -145,20 +147,10 @@ static void Reshape(GLFWwindow*, int w, int h)
         width = w;
         height = h > 0 ? h : 1;
 
-        glViewport(0, 0, width, height);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        float aspect = float(width) / float(height);
-        if (width >= height)
+        if (gCameraSystem != nullptr)
         {
-                // aspect >= 1, set the height from -1 to 1, with larger width
-                glOrtho(-zoom * aspect, zoom * aspect, -zoom + pan_y, zoom + pan_y, -1.0, 1.0);
-        }
-        else
-        {
-                // aspect < 1, set the width to -1 to 1, with larger height
-                glOrtho(-zoom, zoom, -zoom / aspect + pan_y, zoom / aspect + pan_y, -1.0, 1.0);
+                gCameraSystem->OnResize(width, height);
+                gCameraSystem->ApplyView();
         }
 }
 
@@ -192,6 +184,23 @@ int main(int, char**)
         }
 
         glfwSwapInterval(1);
+
+        CameraSystem cameraSystem;
+        if (!cameraSystem.Initialize(mainWindow))
+        {
+                fprintf(stderr, "Failed to initialize camera system.\n");
+                glfwTerminate();
+                return -1;
+        }
+
+        int currentWidth = 0;
+        int currentHeight = 0;
+        glfwGetWindowSize(mainWindow, &currentWidth, &currentHeight);
+        width = currentWidth;
+        height = currentHeight > 0 ? currentHeight : 1;
+
+        gCameraSystem = &cameraSystem;
+
         glfwSetWindowSizeCallback(mainWindow, Reshape);
         Reshape(mainWindow, width, height);
 
@@ -209,6 +218,7 @@ int main(int, char**)
         gameLoop.SetPhysicsManager(&physicsManager);
         gameLoop.SetRenderer(&frameRenderer);
         gameLoop.SetInputSystem(&inputSystem);
+        gameLoop.SetCameraSystem(&cameraSystem);
 
         auto groundObject = std::make_unique<GameObject>();
         auto groundBody = std::make_unique<RigidBody>(groundObject.get(),
