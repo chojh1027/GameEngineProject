@@ -31,6 +31,7 @@ public:
     void SetInitialTransform(const Vec2& position, float rotation);
 
 private:
+    void InitializeBodyState();
     void RegisterBody();
     void UnregisterBody();
     void SyncTransform();
