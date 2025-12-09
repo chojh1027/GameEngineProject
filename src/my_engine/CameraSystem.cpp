@@ -24,7 +24,7 @@ void CameraSystem::Update(float deltaTime)
     if (window == nullptr || gInputSystem == nullptr)
         return;
 
-    float moveAmount = moveSpeed * deltaTime;
+    /*float moveAmount = moveSpeed * deltaTime;
     Vec2 deltaPosition(0.0f, 0.0f);
 
     if (gInputSystem->IsKeyDown(GLFW_KEY_LEFT))
@@ -42,7 +42,7 @@ void CameraSystem::Update(float deltaTime)
     if (gInputSystem->IsKeyDown(GLFW_KEY_Q))
         SetZoom(zoom + zoomChange);
     if (gInputSystem->IsKeyDown(GLFW_KEY_E))
-        SetZoom(zoom - zoomChange);
+        SetZoom(zoom - zoomChange);*/
 }
 
 void CameraSystem::ApplyView() const

@@ -95,6 +95,13 @@ public:
         if (gInputSystem == nullptr)
             return;
 
+        // 카메라를 캐릭터 중심으로 이동
+        if (gCameraSystem != nullptr)
+        {
+            Vec2 playerPos = gameObject->transform->GetPosition();
+			gCameraSystem->SetPosition(playerPos + cameraOffset);
+		}
+
         // 마우스 왼쪽 버튼을 누르면 방향을 저장함, 누른 시간을 기록
         // 마우스 왼쪽 버튼을 떼면 저장된 방향으로 누른 시간에 비례하는 힘을 가함
         if (gInputSystem->IsMouseDown(GLFW_MOUSE_BUTTON_LEFT))
@@ -104,9 +111,11 @@ public:
             glfwGetCursorPos(mainWindow, &mouseX, &mouseY);
             Vec2 worldPos;
             if (gCameraSystem != nullptr)
-                    worldPos = gCameraSystem->ScreenToWorld(mouseX, mouseY, width, height);
+            {
+                worldPos = gCameraSystem->ScreenToWorld(mouseX, mouseY, width, height);
+            }
             else
-                    worldPos = Vec2(0.0f, 0.0f);
+                worldPos = Vec2(0.0f, 0.0f);
 
             Vec2 playerPos = gameObject->transform->GetPosition();
             aimDirection = Vec2(worldPos.x - playerPos.x, worldPos.y - playerPos.y);
@@ -120,7 +129,7 @@ public:
         else if (gInputSystem->WasMouseReleased(GLFW_MOUSE_BUTTON_LEFT))
         {
             float chargeRatio = chargeTime / maxChargeTime;
-            float forceMagnitude = chargeRatio * forceFactor * 1000.0f; // 힘의 크기 계산
+            float forceMagnitude = chargeRatio * forceFactor; // 힘의 크기 계산
             Vec2 force = aimDirection * forceMagnitude;
             rigidBody.AddForce(force);
             // 초기화
@@ -134,7 +143,9 @@ private:
     Vec2 aimDirection = Vec2(0.0f, 0.0f);
     float chargeTime = 0.0f;
     float maxChargeTime = 2.0f; // 최대 충전 시간
-    float forceFactor = 30.0f; // 힘의 계수
+    float forceFactor = 80000.0f; // 힘의 계수
+
+	Vec2 cameraOffset = Vec2(0.0f, 3.0f);
 };
 
 static void glfwErrorCallback(int error, const char* description)
@@ -236,6 +247,9 @@ int main(int, char**)
                 glfwTerminate();
                 return -1;
         }
+
+#pragma region GameObjects
+
 
         // 플레이어 오브젝트
 		float playerStartX = 0.0f;
@@ -376,6 +390,8 @@ int main(int, char**)
         }
 
 
+
+#pragma endregion   // GameObjects
 
 
 
