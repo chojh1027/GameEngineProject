@@ -23,7 +23,7 @@
 #include "my_engine/GameObject.h"
 #include "my_engine/physics/PhysicsManager.h"
 #include "my_engine/physics/RigidBody.h"
-#include "my_engine/physics/Joint.h"
+#include "my_engine/physics/JointComponent.h"
 
 namespace
 {
@@ -155,9 +155,11 @@ int main(int, char**)
 
         std::vector<std::unique_ptr<GameObject>> ownedObjects;
         std::vector<std::unique_ptr<Component>> ownedComponents;
-        std::vector<std::unique_ptr<physics::Joint>> ownedJoints;
+        std::vector<std::unique_ptr<JointComponent>> ownedJointComponents;
+        std::vector<std::unique_ptr<Component>> ownedJointRenderers;
         std::vector<RigidBody*> stageBodies;
         std::vector<RigidBody*> chainBodies;
+        std::vector<GameObject*> chainObjects;
 
         gameLoop.SetResetTargets(&stageBodies, &gResetRequested);
 
@@ -172,6 +174,7 @@ int main(int, char**)
         groundObject->AddComponent(groundRenderer.get());
         stageBodies.push_back(groundBody.get());
         chainBodies.push_back(groundBody.get());
+        chainObjects.push_back(groundObject.get());
 
         if (!gameLoop.AddGameObject(groundObject.get()))
         {
@@ -198,6 +201,7 @@ int main(int, char**)
                 linkObject->AddComponent(linkRenderer.get());
                 stageBodies.push_back(linkBody.get());
                 chainBodies.push_back(linkBody.get());
+                chainObjects.push_back(linkObject.get());
 
                 if (!gameLoop.AddGameObject(linkObject.get()))
                 {
@@ -217,10 +221,15 @@ int main(int, char**)
                 physics::Body* bodyB = chainBodies[i]->GetBody();
                 Vec2 anchor = (bodyA->position + bodyB->position) * 0.5f;
 
-                auto joint = std::make_unique<physics::Joint>();
-                joint->Set(bodyA, bodyB, anchor);
-                physicsManager.RegisterJoint(joint.get());
-                ownedJoints.push_back(std::move(joint));
+                GameObject* owningObject = chainObjects[i];
+                auto jointComponent = std::make_unique<JointComponent>(owningObject, chainBodies[i - 1], chainBodies[i], anchor);
+                auto jointRenderer = std::make_unique<JointRenderer>(owningObject, *jointComponent);
+
+                owningObject->AddComponent(jointComponent.get());
+                owningObject->AddComponent(jointRenderer.get());
+
+                ownedJointComponents.push_back(std::move(jointComponent));
+                ownedJointRenderers.push_back(std::move(jointRenderer));
         }
 
         gameLoop.Run();

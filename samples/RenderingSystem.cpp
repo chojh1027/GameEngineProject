@@ -61,6 +61,29 @@ void DrawBody(const physics::Body& body)
     glEnd();
 }
 
+void DrawJoint(const physics::Joint& joint)
+{
+    if (joint.body1 == nullptr || joint.body2 == nullptr)
+        return;
+
+    Mat22 R1(joint.body1->rotation);
+    Mat22 R2(joint.body2->rotation);
+
+    Vec2 x1 = joint.body1->position;
+    Vec2 p1 = x1 + R1 * joint.localAnchor1;
+
+    Vec2 x2 = joint.body2->position;
+    Vec2 p2 = x2 + R2 * joint.localAnchor2;
+
+    glColor3f(0.5f, 0.5f, 0.8f);
+    glBegin(GL_LINES);
+    glVertex2f(x1.x, x1.y);
+    glVertex2f(p1.x, p1.y);
+    glVertex2f(x2.x, x2.y);
+    glVertex2f(p2.x, p2.y);
+    glEnd();
+}
+
 BodyRenderer::BodyRenderer(GameObject* owner, const RigidBody& rigidBodyRef)
     : Component(owner)
     , rigidBody(rigidBodyRef)
@@ -79,6 +102,26 @@ void BodyRenderer::Update(float deltaTime)
     glLoadIdentity();
 
     DrawBody(*body);
+}
+
+JointRenderer::JointRenderer(GameObject* owner, const JointComponent& jointComponent)
+    : Component(owner)
+    , jointComponent(jointComponent)
+{
+}
+
+void JointRenderer::Update(float deltaTime)
+{
+    (void)deltaTime;
+
+    const physics::Joint* joint = jointComponent.GetJoint();
+    if (joint == nullptr)
+        return;
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    DrawJoint(*joint);
 }
 
 FrameRenderer::FrameRenderer(GLFWwindow* windowPtr)
