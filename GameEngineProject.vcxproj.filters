@@ -186,6 +186,9 @@
     <ClCompile Include="src\my_engine\physics\World.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
+    <ClCompile Include="samples\TextureRenderer.cpp">
+      <Filter>소스 파일\samples</Filter>
+    </ClCompile>
     <ClCompile Include="src\my_engine\Component.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
@@ -319,6 +322,9 @@
     </ClInclude>
     <ClInclude Include="include\my_engine\GameLoop.h">
       <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="samples\TextureRenderer.h">
+      <Filter>헤더 파일\samples</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\Circle.h">
       <Filter>헤더 파일</Filter>

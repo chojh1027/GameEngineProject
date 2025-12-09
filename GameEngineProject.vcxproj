@@ -183,6 +183,7 @@
     <ClCompile Include="src\my_engine\physics\PhysicsManager.cpp" />
     <ClCompile Include="src\my_engine\physics\RigidBody.cpp" />
     <ClCompile Include="src\my_engine\physics\World.cpp" />
+    <ClCompile Include="samples\TextureRenderer.cpp" />
     <ClCompile Include="samples\RenderingSystem.cpp" />
     <ClCompile Include="samples\main.cpp" />
     <ClCompile Include="src\box2d-lite\Arbiter.cpp" />
@@ -236,6 +237,7 @@
     <ClInclude Include="include\my_engine\GameObject.h" />
     <ClInclude Include="include\my_engine\Transform.h" />
     <ClInclude Include="samples\RenderingSystem.h" />
+    <ClInclude Include="samples\TextureRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
