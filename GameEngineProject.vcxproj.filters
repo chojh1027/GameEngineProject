@@ -150,6 +150,9 @@
     <ClCompile Include="src\my_engine\GameLoop.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
+    <ClCompile Include="src\my_engine\InputSystem.cpp">
+      <Filter>소스 파일\my_physics</Filter>
+    </ClCompile>
     <ClCompile Include="src\my_engine\Transform.cpp">
       <Filter>소스 파일\my_physics</Filter>
     </ClCompile>
@@ -294,6 +297,9 @@
       <Filter>헤더 파일\glfw</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\GameObject.h">
+      <Filter>헤더 파일\my_physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\my_engine\InputSystem.h">
       <Filter>헤더 파일\my_physics</Filter>
     </ClInclude>
     <ClInclude Include="include\my_engine\Transform.h">

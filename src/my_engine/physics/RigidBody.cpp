@@ -71,7 +71,7 @@ void RigidBody::RegisterBody()
     if (isRegistered || gPhysicsManager == nullptr)
         return;
 
-    gPhysicsManager->RegisterBody(&body);
+    gPhysicsManager->RegisterBody(this);
     isRegistered = true;
 }
 
@@ -80,7 +80,7 @@ void RigidBody::UnregisterBody()
     if (!isRegistered || gPhysicsManager == nullptr)
         return;
 
-    gPhysicsManager->UnregisterBody(&body);
+    gPhysicsManager->UnregisterBody(this);
     isRegistered = false;
 }
 

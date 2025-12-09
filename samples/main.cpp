@@ -14,6 +14,7 @@
 #include "my_engine/Component.h"
 #include "my_engine/GameLoop.h"
 #include "my_engine/GameObject.h"
+#include "my_engine/InputSystem.h"
 #include "my_engine/physics/PhysicsManager.h"
 #include "my_engine/physics/RigidBody.h"
 #include "my_engine/physics/JointComponent.h"
@@ -39,48 +40,50 @@ float zoom = 10.0f;
 float pan_y = 8.0f;
 int width = 1280;
 int height = 720;
-
-bool gResetRequested = false;
 } // namespace
+
+class StageController : public Component
+{
+public:
+        StageController(GameObject* owner, GameLoop* loop)
+                : Component(owner)
+                , gameLoop(loop)
+        {
+        }
+
+        void Update(float deltaTime) override
+        {
+                (void)deltaTime;
+                if (gInputSystem == nullptr)
+                        return;
+
+                if (gInputSystem->WasKeyPressed(GLFW_KEY_ESCAPE))
+                {
+                        gInputSystem->RequestClose();
+                        if (gameLoop != nullptr)
+                                gameLoop->Stop();
+                }
+
+                if (gInputSystem->WasKeyPressed(GLFW_KEY_A))
+                        physics::World::accumulateImpulses = !physics::World::accumulateImpulses;
+
+                if (gInputSystem->WasKeyPressed(GLFW_KEY_P))
+                        physics::World::positionCorrection = !physics::World::positionCorrection;
+
+                if (gInputSystem->WasKeyPressed(GLFW_KEY_W))
+                        physics::World::warmStarting = !physics::World::warmStarting;
+
+                if (gInputSystem->WasKeyPressed(GLFW_KEY_R) && gPhysicsManager != nullptr)
+                        gPhysicsManager->ResetBodies();
+        }
+
+private:
+        GameLoop* gameLoop = nullptr;
+};
 
 static void glfwErrorCallback(int error, const char* description)
 {
         printf("GLFW error %d: %s\n", error, description);
-}
-
-static void Keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-        (void)window;
-        (void)scancode;
-        (void)mods;
-
-        if (action != GLFW_PRESS)
-        {
-                return;
-        }
-
-        switch (key)
-        {
-        case GLFW_KEY_ESCAPE:
-                glfwSetWindowShouldClose(mainWindow, GL_TRUE);
-                break;
-
-        case GLFW_KEY_A:
-                physics::World::accumulateImpulses = !physics::World::accumulateImpulses;
-                break;
-
-        case GLFW_KEY_P:
-                physics::World::positionCorrection = !physics::World::positionCorrection;
-                break;
-
-        case GLFW_KEY_W:
-                physics::World::warmStarting = !physics::World::warmStarting;
-                break;
-
-        case GLFW_KEY_R:
-                gResetRequested = true;
-                break;
-        }
 }
 
 static void Reshape(GLFWwindow*, int w, int h)
@@ -136,25 +139,43 @@ int main(int, char**)
 
         glfwSwapInterval(1);
         glfwSetWindowSizeCallback(mainWindow, Reshape);
-        glfwSetKeyCallback(mainWindow, Keyboard);
         Reshape(mainWindow, width, height);
 
         FrameRenderer frameRenderer(mainWindow);
         PhysicsManager physicsManager(Vec2(0.0f, -10.0f), 10);
+        InputSystem inputSystem;
+        if (!inputSystem.Initialize(mainWindow))
+        {
+                fprintf(stderr, "Failed to initialize input system.\n");
+                glfwTerminate();
+                return -1;
+        }
 
         GameLoop gameLoop;
         gameLoop.SetPhysicsManager(&physicsManager);
         gameLoop.SetRenderer(&frameRenderer);
+        gameLoop.SetInputSystem(&inputSystem);
 
         std::vector<std::unique_ptr<GameObject>> ownedObjects;
         std::vector<std::unique_ptr<Component>> ownedComponents;
         std::vector<std::unique_ptr<JointComponent>> ownedJointComponents;
         std::vector<std::unique_ptr<Component>> ownedJointRenderers;
-        std::vector<RigidBody*> stageBodies;
         std::vector<RigidBody*> chainBodies;
         std::vector<GameObject*> chainObjects;
 
-        gameLoop.SetResetTargets(&stageBodies, &gResetRequested);
+        auto controllerObject = std::make_unique<GameObject>();
+        auto stageController = std::make_unique<StageController>(controllerObject.get(), &gameLoop);
+        controllerObject->AddComponent(stageController.get());
+
+        if (!gameLoop.AddGameObject(controllerObject.get()))
+        {
+                fprintf(stderr, "Failed to register controller object with the game loop.\n");
+                glfwTerminate();
+                return -1;
+        }
+
+        ownedComponents.push_back(std::move(stageController));
+        ownedObjects.push_back(std::move(controllerObject));
 
         auto groundObject = std::make_unique<GameObject>();
         auto groundBody = std::make_unique<RigidBody>(groundObject.get(),
@@ -165,7 +186,6 @@ int main(int, char**)
         auto groundRenderer = std::make_unique<BodyRenderer>(groundObject.get(), *groundBody);
         groundObject->AddComponent(groundBody.get());
         groundObject->AddComponent(groundRenderer.get());
-        stageBodies.push_back(groundBody.get());
         chainBodies.push_back(groundBody.get());
         chainObjects.push_back(groundObject.get());
 
@@ -192,7 +212,6 @@ int main(int, char**)
                 auto linkRenderer = std::make_unique<BodyRenderer>(linkObject.get(), *linkBody);
                 linkObject->AddComponent(linkBody.get());
                 linkObject->AddComponent(linkRenderer.get());
-                stageBodies.push_back(linkBody.get());
                 chainBodies.push_back(linkBody.get());
                 chainObjects.push_back(linkObject.get());
 

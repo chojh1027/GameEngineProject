@@ -10,6 +10,7 @@
 class PhysicsManager;
 class FrameRenderer;
 class RigidBody;
+class InputSystem;
 
 class GameLoop {
 public:
@@ -19,7 +20,7 @@ public:
         bool RemoveGameObject(GameObject* object);
         void SetPhysicsManager(PhysicsManager* manager);
         void SetRenderer(FrameRenderer* renderer);
-        void SetResetTargets(std::vector<RigidBody*>* bodies, bool* resetFlag);
+        void SetInputSystem(InputSystem* system);
         void Run();
         void Stop();
 
@@ -30,16 +31,15 @@ void InitializeObjects();
 void FixedUpdateObjects(float fixedDeltaTime);
 void UpdateObjects(float deltaTime);
 void ShutdownObjects();
-void ClearObjects();
+        void ClearObjects();
 
-GameObject* gameObjects[MAX_GAMEOBJECT_COUNT];
-int gameObjectCount = 0;
-PhysicsManager* physicsManager = nullptr;
-FrameRenderer* frameRenderer = nullptr;
-std::vector<RigidBody*>* resetBodies = nullptr;
-bool* resetRequested = nullptr;
-bool isRunning = false;
-float fixedDeltaTime = 1.0f / 60.0f;
+        GameObject* gameObjects[MAX_GAMEOBJECT_COUNT];
+        int gameObjectCount = 0;
+        PhysicsManager* physicsManager = nullptr;
+        FrameRenderer* frameRenderer = nullptr;
+        InputSystem* inputSystem = nullptr;
+        bool isRunning = false;
+        float fixedDeltaTime = 1.0f / 60.0f;
 };
 
 #endif // GAME_LOOP_H
