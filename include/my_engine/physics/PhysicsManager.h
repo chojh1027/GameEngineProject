@@ -14,17 +14,19 @@ class PhysicsManager
 public:
     PhysicsManager(Vec2 gravity, int iterations);
 
-    void RegisterBody(physics::Body* body);
-    void UnregisterBody(physics::Body* body);
+    void RegisterBody(class RigidBody* rigidBody);
+    void UnregisterBody(class RigidBody* rigidBody);
 
     void RegisterJoint(physics::Joint* joint);
     void UnregisterJoint(physics::Joint* joint);
 
     void Step(float deltaTime);
     void RebuildWorld();
+    void ResetBodies();
 
     const std::vector<physics::Body*>& GetBodies() const { return bodies; }
     const std::vector<physics::Joint*>& GetJoints() const { return joints; }
+    const std::vector<class RigidBody*>& GetRigidBodies() const { return rigidBodies; }
     const physics::World& GetWorld() const { return world; }
 
 private:
@@ -33,6 +35,7 @@ private:
 
     physics::World world;
     std::vector<physics::Body*> bodies;
+    std::vector<class RigidBody*> rigidBodies;
     std::vector<physics::Joint*> joints;
 };
 

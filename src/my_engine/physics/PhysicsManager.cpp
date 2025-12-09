@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "my_engine/physics/RigidBody.h"
+
 namespace
 {
 bool Contains(const std::vector<physics::Body*>& bodies, const physics::Body* body)
@@ -22,17 +24,29 @@ PhysicsManager::PhysicsManager(Vec2 gravity, int iterations)
 {
 }
 
-void PhysicsManager::RegisterBody(physics::Body* body)
+void PhysicsManager::RegisterBody(RigidBody* rigidBody)
 {
+    if (rigidBody == nullptr)
+        return;
+
+    physics::Body* body = rigidBody->GetBody();
     if (body == nullptr || Contains(bodies, body))
         return;
 
+    if (std::find(rigidBodies.begin(), rigidBodies.end(), rigidBody) == rigidBodies.end())
+        rigidBodies.push_back(rigidBody);
     bodies.push_back(body);
     world.Add(body);
 }
 
-void PhysicsManager::UnregisterBody(physics::Body* body)
+void PhysicsManager::UnregisterBody(RigidBody* rigidBody)
 {
+    if (rigidBody == nullptr)
+        return;
+
+    physics::Body* body = rigidBody->GetBody();
+    rigidBodies.erase(std::remove(rigidBodies.begin(), rigidBodies.end(), rigidBody), rigidBodies.end());
+
     if (body == nullptr)
         return;
 
@@ -82,6 +96,19 @@ void PhysicsManager::RebuildWorld()
 
         world.Add(joint);
     }
+}
+
+void PhysicsManager::ResetBodies()
+{
+    for (RigidBody* rigidBody : rigidBodies)
+    {
+        if (rigidBody == nullptr)
+            continue;
+
+        rigidBody->Reset();
+    }
+
+    RebuildWorld();
 }
 
 void PhysicsManager::RemoveBodyFromWorld(physics::Body* body)

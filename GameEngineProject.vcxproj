@@ -172,6 +172,7 @@
     <ClCompile Include="external\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="external\imgui\backends\imgui_impl_opengl2.cpp" />
     <ClCompile Include="src\my_engine\GameLoop.cpp" />
+    <ClCompile Include="src\my_engine\InputSystem.cpp" />
     <ClCompile Include="src\my_engine\GameObject.cpp" />
     <ClCompile Include="src\my_engine\physics\Arbiter.cpp" />
     <ClCompile Include="src\my_engine\physics\Body.cpp" />
@@ -229,6 +230,7 @@
     <ClInclude Include="external\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="external\imgui\backends\imgui_impl_opengl2.h" />
     <ClInclude Include="include\my_engine\GameLoop.h" />
+    <ClInclude Include="include\my_engine\InputSystem.h" />
     <ClInclude Include="include\my_engine\GameObject.h" />
     <ClInclude Include="include\my_engine\Transform.h" />
     <ClInclude Include="samples\RenderingSystem.h" />

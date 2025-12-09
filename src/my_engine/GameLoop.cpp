@@ -5,6 +5,7 @@
 #include <iterator>
 
 #include "my_engine/physics/PhysicsManager.h"
+#include "my_engine/InputSystem.h"
 #include "../../samples/RenderingSystem.h"
 #include "my_engine/physics/RigidBody.h"
 
@@ -24,10 +25,10 @@ void GameLoop::SetRenderer(FrameRenderer* renderer)
         frameRenderer = renderer;
 }
 
-void GameLoop::SetResetTargets(std::vector<RigidBody*>* bodies, bool* resetFlag)
+void GameLoop::SetInputSystem(InputSystem* system)
 {
-        resetBodies = bodies;
-        resetRequested = resetFlag;
+        inputSystem = system;
+        gInputSystem = system;
 }
 
 bool GameLoop::AddGameObject(GameObject* object)
@@ -97,21 +98,8 @@ void GameLoop::Run()
                         break;
                 }
 
-                if (resetRequested != nullptr && resetBodies != nullptr && *resetRequested)
-                {
-                        for (RigidBody* body : *resetBodies)
-                        {
-                                if (body == nullptr)
-                                        continue;
-
-                                body->Reset();
-                        }
-
-                        if (physicsManager != nullptr)
-                                physicsManager->RebuildWorld();
-
-                        *resetRequested = false;
-                }
+                if (inputSystem != nullptr)
+                        inputSystem->Update();
 
                 accumulator += delta.count();
                 while (accumulator >= fixedDeltaTime)

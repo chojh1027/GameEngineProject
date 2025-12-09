@@ -30,6 +30,9 @@ public:
 
     void SetInitialTransform(const Vec2& position, float rotation);
 
+	void SetVelocity(const Vec2& velocity);
+	void AddForce(const Vec2& force);
+
 private:
     void InitializeBodyState();
     void RegisterBody();
