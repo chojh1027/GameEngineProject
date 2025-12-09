@@ -4,204 +4,128 @@
 #include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <utility>
 
 #include "GLFW/glfw3.h"
 #include "box2d-lite/MathUtils.h"
-#include <algorithm>
-#include <array>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <vector>
-
-#include <zlib.h>
 
 namespace
 {
     namespace fs = std::experimental::filesystem;
 
-    struct PngImage
+    struct BmpImage
     {
         int width = 0;
         int height = 0;
         std::vector<unsigned char> pixels; // RGBA8
     };
 
-    uint32_t ReadBigEndianUInt32(const unsigned char* data)
+    template <typename T>
+    bool ReadLittleEndian(std::ifstream& file, T& outValue)
     {
-        return (static_cast<uint32_t>(data[0]) << 24) |
-               (static_cast<uint32_t>(data[1]) << 16) |
-               (static_cast<uint32_t>(data[2]) << 8) |
-               static_cast<uint32_t>(data[3]);
-    }
-
-    bool DecodeScanlines(const std::vector<unsigned char>& compressed,
-                         int width,
-                         int height,
-                         int bytesPerPixel,
-                         std::vector<unsigned char>& outPixels)
-    {
-        uLongf uncompressedSize = static_cast<uLongf>((bytesPerPixel * width + 1) * height);
-        std::vector<unsigned char> inflated(uncompressedSize);
-
-        if (uncompress(inflated.data(), &uncompressedSize, compressed.data(), static_cast<uLongf>(compressed.size())) != Z_OK)
+        unsigned char bytes[sizeof(T)];
+        if (!file.read(reinterpret_cast<char*>(bytes), sizeof(T)))
             return false;
 
-        const int stride = bytesPerPixel * width;
-        outPixels.resize(static_cast<size_t>(stride * height));
-
-        auto PaethPredictor = [](int a, int b, int c) {
-            int p = a + b - c;
-            int pa = std::abs(p - a);
-            int pb = std::abs(p - b);
-            int pc = std::abs(p - c);
-            if (pa <= pb && pa <= pc)
-                return a;
-            if (pb <= pc)
-                return b;
-            return c;
-        };
-
-        for (int y = 0; y < height; ++y)
-        {
-            const unsigned char* scanline = inflated.data() + y * (stride + 1);
-            unsigned char filter = scanline[0];
-            const unsigned char* src = scanline + 1;
-            unsigned char* dst = outPixels.data() + y * stride;
-
-            switch (filter)
-            {
-            case 0: // None
-                std::copy(src, src + stride, dst);
-                break;
-            case 1: // Sub
-                for (int x = 0; x < stride; ++x)
-                {
-                    int left = (x >= bytesPerPixel) ? dst[x - bytesPerPixel] : 0;
-                    dst[x] = static_cast<unsigned char>((src[x] + left) & 0xff);
-                }
-                break;
-            case 2: // Up
-                for (int x = 0; x < stride; ++x)
-                {
-                    int up = (y > 0) ? outPixels[(y - 1) * stride + x] : 0;
-                    dst[x] = static_cast<unsigned char>((src[x] + up) & 0xff);
-                }
-                break;
-            case 3: // Average
-                for (int x = 0; x < stride; ++x)
-                {
-                    int left = (x >= bytesPerPixel) ? dst[x - bytesPerPixel] : 0;
-                    int up = (y > 0) ? outPixels[(y - 1) * stride + x] : 0;
-                    int avg = (left + up) / 2;
-                    dst[x] = static_cast<unsigned char>((src[x] + avg) & 0xff);
-                }
-                break;
-            case 4: // Paeth
-                for (int x = 0; x < stride; ++x)
-                {
-                    int left = (x >= bytesPerPixel) ? dst[x - bytesPerPixel] : 0;
-                    int up = (y > 0) ? outPixels[(y - 1) * stride + x] : 0;
-                    int upLeft = (y > 0 && x >= bytesPerPixel) ? outPixels[(y - 1) * stride + x - bytesPerPixel] : 0;
-                    int predictor = PaethPredictor(left, up, upLeft);
-                    dst[x] = static_cast<unsigned char>((src[x] + predictor) & 0xff);
-                }
-                break;
-            default:
-                return false;
-            }
-        }
-
+        outValue = 0;
+        for (size_t i = 0; i < sizeof(T); ++i)
+            outValue |= static_cast<T>(bytes[i]) << (8 * i);
         return true;
     }
 
-    bool LoadPngFile(const fs::path& path, PngImage& outImage)
+    bool LoadBmpFile(const fs::path& path, BmpImage& outImage)
     {
         std::ifstream file(path, std::ios::binary);
         if (!file)
             return false;
 
-        std::vector<unsigned char> data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        if (data.size() < 8)
+        unsigned char signature[2];
+        if (!file.read(reinterpret_cast<char*>(signature), 2))
+            return false;
+        if (signature[0] != 'B' || signature[1] != 'M')
             return false;
 
-        const unsigned char signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
-        if (!std::equal(std::begin(signature), std::end(signature), data.begin()))
+        uint32_t fileSize = 0;
+        uint16_t reserved1 = 0;
+        uint16_t reserved2 = 0;
+        uint32_t pixelOffset = 0;
+        if (!ReadLittleEndian(file, fileSize) ||
+            !ReadLittleEndian(file, reserved1) ||
+            !ReadLittleEndian(file, reserved2) ||
+            !ReadLittleEndian(file, pixelOffset))
             return false;
 
-        size_t offset = 8;
-        std::vector<unsigned char> idat;
-        uint32_t width = 0;
-        uint32_t height = 0;
-        int bitDepth = 0;
-        int colorType = 0;
-        int interlace = 0;
+        uint32_t dibHeaderSize = 0;
+        if (!ReadLittleEndian(file, dibHeaderSize))
+            return false;
+        if (dibHeaderSize < 40)
+            return false; // require BITMAPINFOHEADER or larger
 
-        while (offset + 8 <= data.size())
+        int32_t width = 0;
+        int32_t height = 0;
+        uint16_t planes = 0;
+        uint16_t bitsPerPixel = 0;
+        uint32_t compression = 0;
+        uint32_t imageSize = 0;
+
+        if (!ReadLittleEndian(file, width) ||
+            !ReadLittleEndian(file, height) ||
+            !ReadLittleEndian(file, planes) ||
+            !ReadLittleEndian(file, bitsPerPixel) ||
+            !ReadLittleEndian(file, compression) ||
+            !ReadLittleEndian(file, imageSize))
+            return false;
+
+        if (planes != 1)
+            return false;
+        if (!(bitsPerPixel == 24 || bitsPerPixel == 32))
+            return false; // only support 24-bit BGR or 32-bit BGRA
+        if (compression != 0)
+            return false; // only support BI_RGB (no compression)
+
+        // Skip the rest of the DIB header if present
+        if (dibHeaderSize > 24)
         {
-            uint32_t length = ReadBigEndianUInt32(&data[offset]);
-            offset += 4;
-            if (offset + 4 > data.size())
+            file.seekg(static_cast<std::streamoff>(dibHeaderSize - 24), std::ios::cur);
+            if (!file)
                 return false;
-            std::array<char, 5> chunkType = {0, 0, 0, 0, 0};
-            for (int i = 0; i < 4; ++i)
-                chunkType[i] = static_cast<char>(data[offset + i]);
-            offset += 4;
-
-            if (offset + length + 4 > data.size())
-                return false;
-
-            const unsigned char* chunkData = data.data() + offset;
-            if (chunkType[0] == 'I' && chunkType[1] == 'H' && chunkType[2] == 'D' && chunkType[3] == 'R')
-            {
-                if (length < 13)
-                    return false;
-                width = ReadBigEndianUInt32(chunkData);
-                height = ReadBigEndianUInt32(chunkData + 4);
-                bitDepth = chunkData[8];
-                colorType = chunkData[9];
-                interlace = chunkData[12];
-            }
-            else if (chunkType[0] == 'I' && chunkType[1] == 'D' && chunkType[2] == 'A' && chunkType[3] == 'T')
-            {
-                idat.insert(idat.end(), chunkData, chunkData + length);
-            }
-            else if (chunkType[0] == 'I' && chunkType[1] == 'E' && chunkType[2] == 'N' && chunkType[3] == 'D')
-            {
-                break;
-            }
-
-            offset += length + 4; // skip CRC
         }
 
-        if (width == 0 || height == 0 || idat.empty())
+        // Jump to pixel data
+        file.seekg(static_cast<std::streamoff>(pixelOffset), std::ios::beg);
+        if (!file)
             return false;
 
-        if (interlace != 0)
-            return false; // only support no interlace
+        const int absHeight = std::abs(height);
+        const int rowStrideInFile = ((bitsPerPixel * width + 31) / 32) * 4; // rows aligned to 4 bytes
+        const int bytesPerPixel = bitsPerPixel / 8;
 
-        if (!(bitDepth == 8 && (colorType == 2 || colorType == 6)))
-            return false; // only support RGB/RGBA 8-bit
-
-        const int bytesPerPixel = (colorType == 6) ? 4 : 3;
-        std::vector<unsigned char> raw;
-        if (!DecodeScanlines(idat, static_cast<int>(width), static_cast<int>(height), bytesPerPixel, raw))
+        std::vector<unsigned char> rawData(static_cast<size_t>(rowStrideInFile * absHeight));
+        if (!file.read(reinterpret_cast<char*>(rawData.data()), rawData.size()))
             return false;
 
-        outImage.width = static_cast<int>(width);
-        outImage.height = static_cast<int>(height);
-        outImage.pixels.resize(static_cast<size_t>(width * height * 4));
+        outImage.width = width;
+        outImage.height = absHeight;
+        outImage.pixels.resize(static_cast<size_t>(width * absHeight * 4));
 
-        for (int i = 0; i < static_cast<int>(width * height); ++i)
+        const bool bottomUp = height > 0;
+        for (int y = 0; y < absHeight; ++y)
         {
-            const unsigned char* src = raw.data() + i * bytesPerPixel;
-            unsigned char* dst = outImage.pixels.data() + i * 4;
-            dst[0] = src[0];
-            dst[1] = src[1];
-            dst[2] = src[2];
-            dst[3] = (bytesPerPixel == 4) ? src[3] : 255;
+            int srcRow = bottomUp ? (absHeight - 1 - y) : y;
+            const unsigned char* src = rawData.data() + srcRow * rowStrideInFile;
+            unsigned char* dst = outImage.pixels.data() + static_cast<size_t>(y * width * 4);
+
+            for (int x = 0; x < width; ++x)
+            {
+                const unsigned char* pixel = src + x * bytesPerPixel;
+                dst[x * 4 + 0] = pixel[2];
+                dst[x * 4 + 1] = pixel[1];
+                dst[x * 4 + 2] = pixel[0];
+                dst[x * 4 + 3] = (bytesPerPixel == 4) ? pixel[3] : 255;
+            }
         }
 
         return true;
@@ -232,16 +156,16 @@ bool TextureRenderer::LoadTexture()
     if (!texturePath.has_parent_path())
         texturePath = fs::path("src") / texturePath;
 
-    if (LoadTextureFromPng(texturePath))
+    if (LoadTextureFromBmp(texturePath))
         return true;
 
     return false;
 }
 
-bool TextureRenderer::LoadTextureFromPng(const std::experimental::filesystem::path& texturePath)
+bool TextureRenderer::LoadTextureFromBmp(const std::experimental::filesystem::path& texturePath)
 {
-    PngImage image;
-    if (!LoadPngFile(texturePath, image))
+    BmpImage image;
+    if (!LoadBmpFile(texturePath, image))
     {
         std::cerr << "Could not open or decode texture file: " << texturePath << "\n";
         return false;

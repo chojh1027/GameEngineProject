@@ -20,7 +20,7 @@ public:
 
 private:
     bool LoadTexture();
-    bool LoadTextureFromPng(const std::experimental::filesystem::path& texturePath);
+    bool LoadTextureFromBmp(const std::experimental::filesystem::path& texturePath);
     void CreateFallbackTexture();
 
     const RigidBody& rigidBody;
